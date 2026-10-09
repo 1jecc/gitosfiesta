@@ -1,0 +1,75 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="gitosfiesta.LoginPage"
+             BackgroundColor="#E2F2F4">
+
+    <ScrollView>
+        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
+
+            <!-- Recuadro Central Principal -->
+            <Frame BackgroundColor="White"
+                   CornerRadius="24"
+                   HasShadow="True"
+                   Padding="35"
+                   WidthRequest="420"
+                   MaximumWidthRequest="450"
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   BorderColor="#00D2C4">
+
+                <VerticalStackLayout Spacing="22">
+
+                    <!-- Logo más grande (Sin texto de nombre) -->
+                    <Image Source="logo_login.jpeg" 
+                           HeightRequest="250" 
+                           Aspect="AspectFit" 
+                           HorizontalOptions="Center" />
+
+                    <Label Text="Inicia sesión para continuar" 
+                           FontSize="15" 
+                           HorizontalOptions="Center" 
+                           TextColor="#666666"
+                           Margin="0,0,0,5"/>
+
+                    <!-- Campo de Usuario -->
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Fill">
+                        <Label Text="Usuario o Correo" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="12" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Entry x:Name="TxtUsuario" 
+                                   Placeholder="Escribe tu usuario" 
+                                   TextColor="#333" 
+                                   PlaceholderColor="#AAA"
+                                   BackgroundColor="Transparent"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- Campo de Contraseña -->
+                    <VerticalStackLayout Spacing="6" HorizontalOptions="Fill">
+                        <Label Text="Contraseña" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="12" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Entry x:Name="TxtPassword" 
+                                   Placeholder="Escribe tu contraseña" 
+                                   IsPassword="True" 
+                                   TextColor="#333" 
+                                   PlaceholderColor="#AAA"
+                                   BackgroundColor="Transparent"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- Botón de Inicio de Sesión -->
+                    <Button Text="Iniciar Sesión" 
+                            BackgroundColor="#00D2C4" 
+                            TextColor="White" 
+                            FontAttributes="Bold" 
+                            FontSize="16"
+                            CornerRadius="12" 
+                            HeightRequest="50"
+                            Margin="0,10,0,0"
+                            Clicked="OnLoginClicked"/>
+
+                </VerticalStackLayout>
+            </Frame>
+        </Grid>
+    </ScrollView>
+</ContentPage>
