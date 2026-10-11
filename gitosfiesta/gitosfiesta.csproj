@@ -26,33 +26,31 @@
 		<TargetPlatformMinVersion Condition="$(:GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
 	</PropertyGroup>
 
-<ItemGroup>
+	<ItemGroup>
+		<!-- Icono de la aplicación -->
+		<MauiIcon Include="Resources\AppIcon\logop.png" Color="#FFFFFF" />
+		<!-- Splash Screen -->
+		<MauiSplashScreen Include="Resources\AppIcon\logop.png" Color="#FFFFFF" BaseSize="128,128" />
 
-    <!-- Icono de la aplicación -->
-    <MauiIcon Include="Resources\Images\logo.jpeg" />
+		<!-- Imágenes (Excluimos logop para que no cause conflicto) -->
+		<MauiImage Include="Resources\Images\*" Exclude="Resources\Images\logop - Copia.png" />
 
-    <!-- Splash Screen -->
-    <MauiSplashScreen
-        Include="Resources\Images\logo.jpeg"
-        Color="#FFFFFF"
-        BaseSize="128,128" />
+		<!-- Fuentes -->
+		<MauiFont Include="Resources\Fonts\*" />
 
-    <!-- Imágenes -->
-    <MauiImage Include="Resources\Images\*" Exclude="Resources\Images\logo.jpeg" />
-
-    <!-- Fuentes -->
-    <MauiFont Include="Resources\Fonts\*" />
-
-    <!-- Assets -->
-    <MauiAsset Include="Resources\Raw\**"
-               LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
-
-</ItemGroup>
-
+		<!-- Assets -->
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
 		<PackageReference Include="Supabase" Version="8.3.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <MauiXaml Update="NuevoEventoPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	</ItemGroup>
 
 	<ItemGroup>

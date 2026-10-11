@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="gitosfiesta.NuevoEventoPage"
+             Title="Nuevo Evento"
+             BackgroundColor="#E2F2F4">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="25">
+
+            <!-- Encabezado -->
+            <Label Text="Crear Nuevo Evento" 
+                   FontSize="22" 
+                   FontAttributes="Bold" 
+                   TextColor="#333333" 
+                   HorizontalOptions="Center" 
+                   Margin="0,10,0,10"/>
+
+            <!-- Tarjeta de Formulario -->
+            <Frame BackgroundColor="White"
+                   CornerRadius="20"
+                   HasShadow="True"
+                   Padding="25"
+                   BorderColor="#00D2C4">
+
+                <VerticalStackLayout Spacing="18">
+
+                    <!-- Nombre del Evento -->
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Nombre del Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Entry x:Name="TxtNombreEvento" 
+                                   Placeholder="Ej. Boda de Carlos y Ana" 
+                                   TextColor="#333" 
+                                   PlaceholderColor="#AAA"
+                                   BackgroundColor="Transparent"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- Descripción -->
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Descripción o Motivo" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Editor x:Name="TxtDescripcion" 
+                                    Placeholder="Detalles del evento..." 
+                                    TextColor="#333" 
+                                    PlaceholderColor="#AAA"
+                                    HeightRequest="90"
+                                    BackgroundColor="Transparent"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- Fecha del Evento -->
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Fecha del Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <DatePicker x:Name="DatePickerFecha" 
+                                    TextColor="#333" 
+                                    BackgroundColor="#F8F9FA"/>
+                    </VerticalStackLayout>
+
+                    <!-- Botón de Guardar -->
+                    <Button Text="Guardar Evento" 
+                            BackgroundColor="#00D2C4" 
+                            TextColor="White" 
+                            FontAttributes="Bold" 
+                            FontSize="16"
+                            CornerRadius="12" 
+                            HeightRequest="50"
+                            Margin="0,10,0,0"
+                            Clicked="OnGuardarEventoClicked"/>
+
+                </VerticalStackLayout>
+            </Frame>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

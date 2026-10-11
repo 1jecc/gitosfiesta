@@ -42,6 +42,12 @@ build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.MainPage.xaml
 build_metadata.AdditionalFiles.TargetPath = MainPage.xaml
 build_metadata.AdditionalFiles.RelativePath = MainPage.xaml
 
+[C:/Users/jorge/source/repos/gitosfiesta/gitosfiesta/NuevoEventoPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.NuevoEventoPage.xaml
+build_metadata.AdditionalFiles.TargetPath = NuevoEventoPage.xaml
+build_metadata.AdditionalFiles.RelativePath = NuevoEventoPage.xaml
+
 [C:/Users/jorge/source/repos/gitosfiesta/gitosfiesta/Resources/Styles/Colors.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.Resources.Styles.Colors.xaml

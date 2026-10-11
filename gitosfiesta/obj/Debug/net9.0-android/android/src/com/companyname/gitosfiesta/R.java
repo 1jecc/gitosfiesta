@@ -12629,10 +12629,10 @@ public final class R {
     public static final int support_simple_spinner_dropdown_item=0x7f0b0071;
   }
   public static final class mipmap {
-    public static final int logo=0x7f0d0000;
-    public static final int logo_background=0x7f0d0001;
-    public static final int logo_foreground=0x7f0d0002;
-    public static final int logo_round=0x7f0d0003;
+    public static final int logop=0x7f0d0000;
+    public static final int logop_background=0x7f0d0001;
+    public static final int logop_foreground=0x7f0d0002;
+    public static final int logop_round=0x7f0d0003;
   }
   public static final class plurals {
     public static final int mtrl_badge_content_description=0x7f0e0000;

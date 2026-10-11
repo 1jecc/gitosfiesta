@@ -4,7 +4,6 @@ namespace gitosfiesta;
 
 public partial class LoginPage : ContentPage
 {
-    // Agregamos el signo de interrogación (?) para indicar que puede ser nulo de forma segura
     private readonly Supabase.Client? _supabaseClient;
 
     public LoginPage()
@@ -45,8 +44,8 @@ public partial class LoginPage : ContentPage
             {
                 await DisplayAlert("¡Éxito!", $"Bienvenido/a, {userFound.Nombre} {userFound.ApellidoPaterno}\nRol: {userFound.AccessType}", "Continuar");
 
-                // Llamamos a la carga dinámica del menú y las vistas
-                CargarMenuDinamico();
+                // Llamamos a la carga dinámica pasando el rol/tipo de acceso del usuario encontrado
+                CargarMenuDinamicoParaUsuario(userFound.AccessType);
             }
             else
             {
@@ -59,28 +58,35 @@ public partial class LoginPage : ContentPage
         }
     }
 
-    private async void CargarMenuDinamico()
+    private async void CargarMenuDinamicoParaUsuario(string rolUsuario)
     {
         try
         {
-            // Consultamos todos los elementos habilitados de la tabla de menú ordenados por ID o categoría
+            // Descargamos los registros de la tabla y filtramos en C# de forma segura 
+            // para ignorar diferencias de mayúsculas/minúsculas o espacios accidentales.
             var response = await _supabaseClient!
-                .From<MenuItemModel>()
-                .Where(x => x.Enable == true)
+                .From<MenuAccessModel>()
                 .Get();
 
-            var menuItems = response.Models;
+            var menuItems = response.Models?
+                .Where(x => x.Enable == true &&
+                            !string.IsNullOrEmpty(x.Access) &&
+                            x.Access.Trim().Equals(rolUsuario?.Trim(), StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-            // Aquí creamos una estructura de Flyout / Shell de forma dinámica
+            // Verificación de seguridad si la lista sigue vacía
+            if (menuItems == null || menuItems.Count == 0)
+            {
+                await DisplayAlert("Aviso", $"No hay pantallas configuradas para el rol: {rolUsuario}", "Aceptar");
+                return;
+            }
+
             var shell = new Shell();
 
             foreach (var item in menuItems)
             {
-                // item.Description -> El texto que se muestra en el menú (ej. "Inicio")
-                // item.Value1 -> La página o ruta asociada (ej. "inicio")
-                // item.Value2 -> La categoría (ej. "General")
+                var contentPage = ObtenerPaginaDinamica(item.ApiController);
 
-                var contentPage = ObtenerPaginaPorNombre(item.Value1);
                 if (contentPage != null)
                 {
                     var flyoutItem = new FlyoutItem
@@ -93,8 +99,14 @@ public partial class LoginPage : ContentPage
                 }
             }
 
-            // Reemplazamos la pantalla principal con el Shell dinámico ya construido
-            Application.Current!.Windows[0].Page = shell;
+            if (shell.Items.Count > 0)
+            {
+                Application.Current!.Windows[0].Page = shell;
+            }
+            else
+            {
+                await DisplayAlert("Error", "No se pudo cargar ninguna vista válida para este usuario.", "Aceptar");
+            }
         }
         catch (Exception ex)
         {
@@ -102,15 +114,41 @@ public partial class LoginPage : ContentPage
         }
     }
 
-    // Método auxiliar para asociar el texto de la base de datos con tus páginas de C# pasando el cliente de Supabase
-    private Page? ObtenerPaginaPorNombre(string nombreApi)
+    private Page? ObtenerPaginaDinamica(string nombreApi)
     {
-        return nombreApi.ToLower() switch
+        try
         {
-            "inicio" => new MainPage(_supabaseClient!), // Pasamos el cliente requerido por MainPage
-            // "usuarios" => new UsuariosPage(_supabaseClient!),
-            // "contratos" => new ContratosPage(_supabaseClient!),
-            _ => null
-        };
+            if (string.IsNullOrWhiteSpace(nombreApi))
+                return null;
+
+            string nombreLimpio = nombreApi.Replace(" ", "").Trim();
+
+            string nombreCompleto = nombreLimpio.ToLower() == "inicio"
+                ? "gitosfiesta.MainPage"
+                : $"gitosfiesta.{nombreLimpio}Page";
+
+            var tipoPagina = Type.GetType(nombreCompleto);
+
+            if (tipoPagina != null)
+            {
+                var constructorConParametro = tipoPagina.GetConstructor(new[] { typeof(Supabase.Client) });
+
+                if (constructorConParametro != null)
+                {
+                    return constructorConParametro.Invoke(new object[] { _supabaseClient! }) as Page;
+                }
+                else
+                {
+                    return Activator.CreateInstance(tipoPagina) as Page;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            // CORREGIDO: Cambiado a WriteLine correctamente
+            System.Diagnostics.Debug.WriteLine($"Error al cargar página dinámica: {ex.Message}");
+        }
+
+        return null;
     }
 }
