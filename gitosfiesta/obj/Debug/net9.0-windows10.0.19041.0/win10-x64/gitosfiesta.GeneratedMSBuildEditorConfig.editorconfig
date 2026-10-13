@@ -34,6 +34,12 @@ build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.AppShell.xaml
 build_metadata.AdditionalFiles.TargetPath = AppShell.xaml
 build_metadata.AdditionalFiles.RelativePath = AppShell.xaml
 
+[C:/Users/jorge/source/repos/gitosfiesta/gitosfiesta/ContratoPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.ContratoPage.xaml
+build_metadata.AdditionalFiles.TargetPath = ContratoPage.xaml
+build_metadata.AdditionalFiles.RelativePath = ContratoPage.xaml
+
 [C:/Users/jorge/source/repos/gitosfiesta/gitosfiesta/LoginPage.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.LoginPage.xaml
@@ -51,6 +57,12 @@ build_metadata.AdditionalFiles.GenKind = Xaml
 build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.NuevoEventoPage.xaml
 build_metadata.AdditionalFiles.TargetPath = NuevoEventoPage.xaml
 build_metadata.AdditionalFiles.RelativePath = NuevoEventoPage.xaml
+
+[C:/Users/jorge/source/repos/gitosfiesta/gitosfiesta/PizarronFirmaPage.xaml]
+build_metadata.AdditionalFiles.GenKind = Xaml
+build_metadata.AdditionalFiles.ManifestResourceName = gitosfiesta.PizarronFirmaPage.xaml
+build_metadata.AdditionalFiles.TargetPath = PizarronFirmaPage.xaml
+build_metadata.AdditionalFiles.RelativePath = PizarronFirmaPage.xaml
 
 [C:/Users/jorge/source/repos/gitosfiesta/gitosfiesta/Resources/Styles/Colors.xaml]
 build_metadata.AdditionalFiles.GenKind = Xaml

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="gitosfiesta.PizarronFirmaPage"
+             Title="Pizarrón de Firma"
+             BackgroundColor="White">
+
+    <Grid RowDefinitions="*, Auto" Padding="20">
+        <!-- Lienzo de dibujo interactivo -->
+        <Frame Grid.Row="0" BorderColor="#00D2C4" CornerRadius="10" Padding="0" BackgroundColor="#F8F9FA">
+            <GraphicsView x:Name="CanvasFirma" />
+        </Frame>
+
+        <!-- Botones de control -->
+        <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,15,0,0">
+            <Button Grid.Column="0" Text="Borrar" 
+                    BackgroundColor="#E57373" TextColor="White" 
+                    CornerRadius="10" Clicked="OnBorrarClicked"/>
+            <Button Grid.Column="1" Text="Guardar Firma" 
+                    BackgroundColor="#00D2C4" TextColor="White" 
+                    CornerRadius="10" Clicked="OnGuardarFirmaClicked"/>
+        </Grid>
+    </Grid>
+</ContentPage>

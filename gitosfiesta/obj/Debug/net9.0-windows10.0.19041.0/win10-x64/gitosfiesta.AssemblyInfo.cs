@@ -18,7 +18,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("gitosfiesta")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+f76844d9f3082b91bc281ff26a6eda6ce83b5389")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0+505bf75f70e87bddffd288afca61d4c9fc5f8604")]
 [assembly: System.Reflection.AssemblyProductAttribute("gitosfiesta")]
 [assembly: System.Reflection.AssemblyTitleAttribute("gitosfiesta")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

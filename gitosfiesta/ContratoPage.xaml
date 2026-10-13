@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="gitosfiesta.ContratoPage"
+             Title="Contrato Gitos Fiesta"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="15" Padding="15">
+
+            <!-- Encabezado / Logo y Folio -->
+            <Grid ColumnDefinitions="*, Auto" Margin="0,0,0,10">
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" VerticalOptions="Center">
+                    <Label Text="G I T O S   F I E S T A" FontSize="22" FontAttributes="Bold" TextColor="#E91E63" HorizontalOptions="Center"/>
+                    <BoxView HeightRequest="3" BackgroundColor="#00D2C4" WidthRequest="180" Margin="0,5,0,0"/>
+                </VerticalStackLayout>
+
+                <Frame Grid.Column="1" BackgroundColor="White" CornerRadius="10" Padding="8" BorderColor="#333" HasShadow="False">
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="Folio:" FontAttributes="Bold" TextColor="#333" VerticalOptions="Center"/>
+                        <Label x:Name="LblFolio" Text="---" FontAttributes="Bold" TextColor="#E91E63" FontSize="15" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                </Frame>
+            </Grid>
+
+            <!-- Datos Generales Estilo Contrato -->
+            <Frame BackgroundColor="#F8F9FA" BorderColor="#DDD" CornerRadius="10" Padding="12">
+                <VerticalStackLayout Spacing="8">
+
+                    <!-- Fecha Contrato -->
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="Fecha de contrato:" FontAttributes="Bold" TextColor="#333"/>
+                        <Label x:Name="LblFechaContrato" Text="---" TextColor="#555"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Nombre y Teléfono -->
+                    <VerticalStackLayout Spacing="4">
+                        <HorizontalStackLayout Spacing="5">
+                            <Label Text="Nombre:" FontAttributes="Bold" TextColor="#333"/>
+                            <Label x:Name="LblNombre" Text="---" TextColor="#555" LineBreakMode="WordWrap"/>
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="5">
+                            <Label Text="Tel/Cel:" FontAttributes="Bold" TextColor="#333"/>
+                            <Label x:Name="LblTelefono" Text="---" TextColor="#555"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <!-- Evento, Fecha y Hora -->
+                    <Grid ColumnDefinitions="*, *, *" ColumnSpacing="5">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Evento:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                            <Label x:Name="LblEvento" Text="---" TextColor="#555" FontSize="12"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Fecha:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                            <Label x:Name="LblFechaEvento" Text="---" TextColor="#555" FontSize="12"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="Hora:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                            <Label x:Name="LblHora" Text="---" TextColor="#555" FontSize="12"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- Personas y Menú -->
+                    <VerticalStackLayout Spacing="4">
+                        <HorizontalStackLayout Spacing="5">
+                            <Label Text="No. personas:" FontAttributes="Bold" TextColor="#333"/>
+                            <Label x:Name="LblPersonas" Text="---" TextColor="#555"/>
+                        </HorizontalStackLayout>
+                        <HorizontalStackLayout Spacing="5">
+                            <Label Text="Menú:" FontAttributes="Bold" TextColor="#333"/>
+                            <Label x:Name="LblMenu" Text="---" TextColor="#555" LineBreakMode="WordWrap"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+
+                    <!-- Precio, Anticipo y Saldo -->
+                    <Grid ColumnDefinitions="*, *, *" ColumnSpacing="5">
+                        <VerticalStackLayout Grid.Column="0">
+                            <Label Text="Precio:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                            <Label x:Name="LblPrecio" Text="---" TextColor="#555" FontSize="12"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1">
+                            <Label Text="Anticipo:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                            <Label x:Name="LblAnticipo" Text="---" TextColor="#555" FontSize="12"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2">
+                            <Label Text="Saldo:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                            <Label x:Name="LblSaldo" Text="---" TextColor="#E91E63" FontAttributes="Bold" FontSize="12"/>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <!-- Promoción y Observaciones -->
+                    <HorizontalStackLayout Spacing="5">
+                        <Label Text="Promoción:" FontAttributes="Bold" TextColor="#333"/>
+                        <Label x:Name="LblPromocion" Text="---" TextColor="#555"/>
+                    </HorizontalStackLayout>
+
+                    <VerticalStackLayout Spacing="2" Margin="0,4,0,0">
+                        <Label Text="OBSERVACIONES:" FontAttributes="Bold" TextColor="#333" FontSize="12"/>
+                        <Label x:Name="LblObservaciones" Text="Ninguna" TextColor="#555" FontSize="12"/>
+                    </VerticalStackLayout>
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Términos y Condiciones -->
+            <VerticalStackLayout Spacing="8" Margin="0,5,0,5">
+                <Label Text="Términos y Condiciones" FontAttributes="Bold" TextColor="#333" HorizontalOptions="Center" FontSize="14"/>
+                <Label x:Name="LblTerminos" Text="Cargando términos..." FontSize="11" TextColor="#444" LineBreakMode="WordWrap"/>
+            </VerticalStackLayout>
+
+            <!-- Sección de Firma -->
+            <VerticalStackLayout Spacing="10" HorizontalOptions="Center" Margin="0,5,0,5">
+                <Label Text="Firma del Cliente" FontAttributes="Bold" TextColor="#333" HorizontalOptions="Center"/>
+
+                <Frame HeightRequest="130" WidthRequest="300" Padding="0" BackgroundColor="#F8F9FA" BorderColor="#999" CornerRadius="5">
+                    <Image x:Name="ImgFirma" Aspect="AspectFit"/>
+                </Frame>
+
+                <Button Text="✍️ Abrir Pizarrón de Firma" 
+                        BackgroundColor="#607D8B" 
+                        TextColor="White" 
+                        FontAttributes="Bold"
+                        CornerRadius="8" 
+                        HeightRequest="40"
+                        Clicked="OnAbrirPizarronClicked"/>
+            </VerticalStackLayout>
+
+            <!-- Botones Cancelar y Guardar -->
+            <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,5,0,10">
+                <Button Grid.Column="0" 
+                        Text="❌ Cancelar" 
+                        BackgroundColor="#E57373" 
+                        TextColor="White" 
+                        FontAttributes="Bold" 
+                        FontSize="14"
+                        CornerRadius="10" 
+                        HeightRequest="48"
+                        Clicked="OnCancelarClicked"/>
+
+                <Button Grid.Column="1" 
+                        Text="Guardar y Finalizar" 
+                        BackgroundColor="#00D2C4" 
+                        TextColor="White" 
+                        FontAttributes="Bold" 
+                        FontSize="14"
+                        CornerRadius="10" 
+                        HeightRequest="48"
+                        Clicked="OnFinalizarContratoClicked"/>
+            </Grid>
+
+            <!-- Pie de Página Institucional -->
+            <VerticalStackLayout Spacing="2" BackgroundColor="#8E24AA" Padding="10" HorizontalOptions="Fill">
+                <Label Text="16 de Agosto No. 101-D, Col. Reserva de San Roque, Esquina con prolongación Pablo Livas, Juárez N.L." 
+                       TextColor="White" FontSize="9" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="15">
+                    <Label Text="Cel/Whatsapp 8119887387" TextColor="White" FontSize="9"/>
+                    <Label Text="facebook/GitosFiesta" TextColor="White" FontSize="9"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

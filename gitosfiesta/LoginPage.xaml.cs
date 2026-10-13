@@ -1,4 +1,5 @@
 ﻿using gitosfiesta.Models;
+using Microsoft.Maui.Controls.Shapes;
 
 namespace gitosfiesta;
 
@@ -42,9 +43,12 @@ public partial class LoginPage : ContentPage
 
             if (userFound != null)
             {
-                await DisplayAlert("¡Éxito!", $"Bienvenido/a, {userFound.Nombre} {userFound.ApellidoPaterno}\nRol: {userFound.AccessType}", "Continuar");
+                // Guardamos los datos de sesión de manera global e interna
+                SessionContext.UsuarioId = (int)userFound.Id;
+                SessionContext.NombreCompleto = $"{userFound.Nombre} {userFound.ApellidoPaterno}";
+                SessionContext.Rol = userFound.AccessType;
 
-                // Llamamos a la carga dinámica pasando el rol/tipo de acceso del usuario encontrado
+                // Transición directa al menú dinámico
                 CargarMenuDinamicoParaUsuario(userFound.AccessType);
             }
             else
@@ -62,8 +66,6 @@ public partial class LoginPage : ContentPage
     {
         try
         {
-            // Descargamos los registros de la tabla y filtramos en C# de forma segura 
-            // para ignorar diferencias de mayúsculas/minúsculas o espacios accidentales.
             var response = await _supabaseClient!
                 .From<MenuAccessModel>()
                 .Get();
@@ -74,15 +76,104 @@ public partial class LoginPage : ContentPage
                             x.Access.Trim().Equals(rolUsuario?.Trim(), StringComparison.OrdinalIgnoreCase))
                 .ToList();
 
-            // Verificación de seguridad si la lista sigue vacía
             if (menuItems == null || menuItems.Count == 0)
             {
                 await DisplayAlert("Aviso", $"No hay pantallas configuradas para el rol: {rolUsuario}", "Aceptar");
                 return;
             }
 
-            var shell = new Shell();
+            // 1. Instanciamos el Shell eliminando los colores oscuros de la NavigationBar
+            var shell = new Shell
+            {
+                FlyoutBackgroundColor = Color.FromArgb("#F8F9FE")
+            };
 
+            // Eliminamos la barra negra superior y ponemos el turquesa de Gitos Fiesta
+            Shell.SetBackgroundColor(shell, Color.FromArgb("#00D2C4"));
+            Shell.SetForegroundColor(shell, Colors.White);
+            Shell.SetTitleColor(shell, Colors.White);
+
+            // 2. Encabezado superior con la marca Gitos Fiesta (al estilo de la imagen)
+            var headerLayout = new VerticalStackLayout
+            {
+                Padding = new Thickness(20, 35, 20, 15),
+                Spacing = 10,
+                Children =
+                {
+                    new Image
+                    {
+                        Source = "alargado.png",
+                        Aspect = Aspect.AspectFit,
+                        HorizontalOptions = LayoutOptions.Start
+                    },
+                }
+            };
+
+            shell.FlyoutHeader = headerLayout;
+
+            // 3. Plantilla de botones del menú (Estilo tarjeta suave con bordes redondeados)
+            shell.ItemTemplate = new DataTemplate(() =>
+            {
+                var border = new Border
+                {
+                    BackgroundColor = Color.FromArgb("#EAE8F8"),
+                    StrokeShape = new RoundRectangle { CornerRadius = 14 },
+                    Stroke = Colors.Transparent,
+                    Padding = new Thickness(16, 12),
+                    Margin = new Thickness(16, 4)
+                };
+
+                var label = new Label
+                {
+                    FontSize = 15,
+                    TextColor = Color.FromArgb("#3F3B78"),
+                    FontAttributes = FontAttributes.Bold,
+                    VerticalOptions = LayoutOptions.Center
+                };
+                label.SetBinding(Label.TextProperty, "Title");
+
+                border.Content = label;
+                return border;
+            });
+
+            // 4. Pie de página del menú (Perfil del Usuario abajo, como en la imagen de referencia)
+            var footerLayout = new Grid
+            {
+                Padding = new Thickness(20, 15),
+                BackgroundColor = Color.FromArgb("#F0EEF9"),
+                ColumnDefinitions =
+                {
+                    new ColumnDefinition { Width = GridLength.Star },
+                    new ColumnDefinition { Width = GridLength.Auto }
+                }
+            };
+
+            var userDetails = new VerticalStackLayout
+            {
+                Spacing = 2,
+                Children =
+                {
+                    new Label
+                    {
+                        Text = SessionContext.NombreCompleto,
+                        TextColor = Color.FromArgb("#2D2B55"),
+                        FontSize = 14,
+                        FontAttributes = FontAttributes.Bold
+                    },
+                    new Label
+                    {
+                        Text = SessionContext.Rol,
+                        TextColor = Color.FromArgb("#8A88AD"),
+                        FontSize = 12
+                    }
+                }
+            };
+
+            Grid.SetColumn(userDetails, 0);
+            footerLayout.Children.Add(userDetails);
+            shell.FlyoutFooter = footerLayout;
+
+            // 5. Cargar los elementos del menú
             foreach (var item in menuItems)
             {
                 var contentPage = ObtenerPaginaDinamica(item.ApiController);
@@ -145,7 +236,6 @@ public partial class LoginPage : ContentPage
         }
         catch (Exception ex)
         {
-            // CORREGIDO: Cambiado a WriteLine correctamente
             System.Diagnostics.Debug.WriteLine($"Error al cargar página dinámica: {ex.Message}");
         }
 

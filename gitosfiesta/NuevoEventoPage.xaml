@@ -8,7 +8,7 @@
     <ScrollView>
         <VerticalStackLayout Spacing="20" Padding="25">
 
-            <!-- Encabezado -->
+
             <Label Text="Crear Nuevo Evento" 
                    FontSize="22" 
                    FontAttributes="Bold" 
@@ -16,61 +16,162 @@
                    HorizontalOptions="Center" 
                    Margin="0,10,0,10"/>
 
-            <!-- Tarjeta de Formulario -->
             <Frame BackgroundColor="White"
                    CornerRadius="20"
                    HasShadow="True"
                    Padding="25"
                    BorderColor="#00D2C4">
 
-                <VerticalStackLayout Spacing="18">
+                <VerticalStackLayout Spacing="16">
 
-                    <!-- Nombre del Evento -->
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Nombre del Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                    <!-- Nombre del Cliente -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Nombre del Cliente" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
                         <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
-                            <Entry x:Name="TxtNombreEvento" 
-                                   Placeholder="Ej. Boda de Carlos y Ana" 
-                                   TextColor="#333" 
-                                   PlaceholderColor="#AAA"
-                                   BackgroundColor="Transparent"/>
+                            <Entry x:Name="TxtNombreCliente" Placeholder="Ej. Carlos Pérez" TextColor="#333" BackgroundColor="Transparent"/>
                         </Frame>
                     </VerticalStackLayout>
 
-                    <!-- Descripción -->
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Descripción o Motivo" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                    <!-- Teléfono -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Teléfono / Celular" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
                         <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
-                            <Editor x:Name="TxtDescripcion" 
-                                    Placeholder="Detalles del evento..." 
-                                    TextColor="#333" 
-                                    PlaceholderColor="#AAA"
-                                    HeightRequest="90"
-                                    BackgroundColor="Transparent"/>
+                            <Entry x:Name="TxtTelefono" Placeholder="Teléfono (10 dígitos)" TextColor="#333" Keyboard="Telephone"  MaxLength="10" />
                         </Frame>
                     </VerticalStackLayout>
 
-                    <!-- Fecha del Evento -->
-                    <VerticalStackLayout Spacing="6">
-                        <Label Text="Fecha del Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
-                        <DatePicker x:Name="DatePickerFecha" 
-                                    TextColor="#333" 
-                                    BackgroundColor="#F8F9FA"/>
+                    <!-- Tipo de Evento -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Tipo de Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Entry x:Name="TxtTipoEvento" Placeholder="Ej. Cumpleaños, XV Años..." TextColor="#333" BackgroundColor="Transparent"/>
+                        </Frame>
                     </VerticalStackLayout>
 
-                    <!-- Botón de Guardar -->
-                    <Button Text="Guardar Evento" 
-                            BackgroundColor="#00D2C4" 
+                    <!-- 1. FECHA DEL EVENTO (Paso Inicial) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="1. Fecha del Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <DatePicker x:Name="DatePickerFecha" TextColor="#333" BackgroundColor="#F8F9FA" DateSelected="OnFechaSelected"/>
+                    </VerticalStackLayout>
+
+                    <!-- 2. HORARIO (Se habilita al elegir fecha) -->
+                    <!-- 2. HORARIO (Dinámico: Picker para Fines de Semana, TimePicker para Entre Semana) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="2. Horario del Evento" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <VerticalStackLayout>
+                                <!-- Picker para Sábados y Domingos (Bloques fijos) -->
+                                <Picker x:Name="PickerHorario" 
+                                        Title="Selecciona bloque fijo" 
+                                        TextColor="#333" 
+                                        IsEnabled="False" 
+                                        IsVisible="True"
+                                        SelectedIndexChanged="OnHorarioSelectedIndexChanged"/>
+
+                                <!-- TimePicker para Lunes a Viernes (Hora de inicio personalizada) -->
+                                <!-- TimePicker para Lunes a Viernes (Sin hora predeterminada) -->
+                                <TimePicker x:Name="TimePickerEntreSemana" 
+                                        TextColor="#333" 
+                                        IsEnabled="False" 
+                                        IsVisible="False"
+                                        TimeSelected="OnTimePickerTimeSelected"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- 3. PAQUETE (Se habilita al elegir horario) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="3. Paquete Gitos Fiesta" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Picker x:Name="PickerPaquete" Title="Selecciona un paquete" TextColor="#333" IsEnabled="False" SelectedIndexChanged="OnPaqueteSelectedIndexChanged"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- Número de Personas (Automático según paquete) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Número de Personas (Automático)" FontSize="13" TextColor="#555" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#EFEFEF" HasShadow="False" BorderColor="#DCDCDC">
+                            <Entry x:Name="TxtNumeroPersonas" IsReadOnly="True" TextColor="#444" BackgroundColor="Transparent"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- 4. PLATILLO PRINCIPAL (Se habilita al elegir paquete) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="4. Platillo Principal / Menú" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Picker x:Name="PickerPlatillo" Title="Selecciona el platillo" TextColor="#333" IsEnabled="False"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <!-- Precios, Anticipo y Saldo -->
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10">
+                        <VerticalStackLayout Grid.Column="0" Spacing="4">
+                            <Label Text="Precio Total ($)" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                            <Frame CornerRadius="10" Padding="8" BackgroundColor="#EFEFEF" HasShadow="False" BorderColor="#DCDCDC">
+                                <Entry x:Name="TxtPrecio" IsReadOnly="True" TextColor="#444" BackgroundColor="Transparent"/>
+                            </Frame>
+                        </VerticalStackLayout>
+
+                        <VerticalStackLayout Grid.Column="1" Spacing="4">
+                            <Label Text="Anticipo ($)" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                            <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                                <Entry x:Name="TxtAnticipo" Text="1000" Keyboard="Numeric" TextColor="#333" BackgroundColor="Transparent" TextChanged="OnPrecioAnticipoChanged"/>
+                            </Frame>
+                        </VerticalStackLayout>
+                    </Grid>
+
+                    <HorizontalStackLayout Spacing="8">
+                        <Label Text="Saldo Pendiente:" FontSize="14" FontAttributes="Bold" TextColor="#555"/>
+                        <Label x:Name="LblSaldo" Text="$0.00" FontSize="14" FontAttributes="Bold" TextColor="#E91E63"/>
+                    </HorizontalStackLayout>
+
+                    <!-- Promoción o Notas Adicionales -->
+                    <!-- Promoción (Condicional: Lunes a Viernes y >= 60 personas) -->
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Promoción Aplicable" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Picker x:Name="PickerPromocion" Title="Selecciona promoción (si aplica)" TextColor="#333" IsEnabled="False" SelectedIndexChanged="OnPromocionSelectedIndexChanged"/>
+                        </Frame>
+                    </VerticalStackLayout>
+
+                    <Label Text="Extras Disponibles (Selecciona uno o varios):" FontAttributes="Bold" TextColor="#333"/>
+                    <Frame BorderColor="#DCDCDC" CornerRadius="8" BackgroundColor="#F8F9FA" Padding="10">
+                        <VerticalStackLayout x:Name="ContainerExtras" Spacing="8">
+                            <!-- Los extras se cargarán dinámicamente aquí -->
+                        </VerticalStackLayout>
+                    </Frame>
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Observaciones / Notas para Staff" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
+                        <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">
+                            <Editor x:Name="TxtObservaciones" Placeholder="Detalles para refrigerador..." TextColor="#333" HeightRequest="70" BackgroundColor="Transparent"/>
+                        </Frame>
+                    </VerticalStackLayout>
+                    
+                    <Button Text="📄 Ver Términos y Condiciones del Salón" 
+                            BackgroundColor="#607D8B" 
                             TextColor="White" 
                             FontAttributes="Bold" 
-                            FontSize="16"
-                            CornerRadius="12" 
-                            HeightRequest="50"
-                            Margin="0,10,0,0"
-                            Clicked="OnGuardarEventoClicked"/>
+                            FontSize="14"
+                            CornerRadius="10" 
+                            HeightRequest="45"
+                            Margin="0,5,0,5"
+                            Clicked="OnVerTerminosClicked"/>
+
+                    <!-- Botón Guardar -->
+                    <Button x:Name="BtnAccionEvento" Text="Guardar y Registrar Evento" 
+                                BackgroundColor="#00D2C4" 
+                                TextColor="White" 
+                                FontAttributes="Bold" 
+                                FontSize="16"
+                                CornerRadius="12" 
+                                HeightRequest="50"
+                                Margin="0,10,0,0"
+                                Clicked="OnGuardarEventoClicked"/>
+
 
                 </VerticalStackLayout>
             </Frame>
+            
 
         </VerticalStackLayout>
     </ScrollView>
