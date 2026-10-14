@@ -126,6 +126,16 @@
                         Clicked="OnAbrirPizarronClicked"/>
             </VerticalStackLayout>
 
+            <VerticalStackLayout Spacing="2" BackgroundColor="#8E24AA" Padding="10" HorizontalOptions="Fill">
+                <Label Text="16 de Agosto No. 101-D, Col. Reserva de San Roque, Esquina con prolongación Pablo Livas, Juárez N.L." 
+           TextColor="White" FontSize="9" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
+                <HorizontalStackLayout HorizontalOptions="Center" Spacing="15">
+                    <Label Text="Cel/Whatsapp 8119887387" TextColor="White" FontSize="9"/>
+                    <Label Text="facebook/GitosFiesta" TextColor="White" FontSize="9"/>
+                </HorizontalStackLayout>
+            </VerticalStackLayout>
+
+
             <!-- Botones Cancelar y Guardar -->
             <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,5,0,10">
                 <Button Grid.Column="0" 
@@ -150,15 +160,7 @@
             </Grid>
 
             <!-- Pie de Página Institucional -->
-            <VerticalStackLayout Spacing="2" BackgroundColor="#8E24AA" Padding="10" HorizontalOptions="Fill">
-                <Label Text="16 de Agosto No. 101-D, Col. Reserva de San Roque, Esquina con prolongación Pablo Livas, Juárez N.L." 
-                       TextColor="White" FontSize="9" HorizontalOptions="Center" HorizontalTextAlignment="Center"/>
-                <HorizontalStackLayout HorizontalOptions="Center" Spacing="15">
-                    <Label Text="Cel/Whatsapp 8119887387" TextColor="White" FontSize="9"/>
-                    <Label Text="facebook/GitosFiesta" TextColor="White" FontSize="9"/>
-                </HorizontalStackLayout>
-            </VerticalStackLayout>
-
+            
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -12,10 +12,6 @@
           "Microsoft.Extensions.Logging.Debug": "9.0.9",
           "Microsoft.Maui.Controls": "9.0.120",
           "Supabase": "8.3.0",
-          "Microsoft.Maui.Controls.HotReload.Forms": "18.0.0.0",
-          "Microsoft.VisualStudio.DesignTools.MobileTapContracts": "18.0.0.0",
-          "Microsoft.VisualStudio.DesignTools.TapContract": "18.0.0.0",
-          "Microsoft.VisualStudio.DesignTools.XamlTapContract": "18.0.0.0",
           "Microsoft.Web.WebView2.Core.Projection": "1.0.3179.45",
           "runtimepack.Microsoft.Windows.SDK.NET.Ref": "10.0.19041.57"
         },
@@ -683,38 +679,6 @@
           }
         }
       },
-      "Microsoft.Maui.Controls.HotReload.Forms/18.0.0.0": {
-        "runtime": {
-          "Microsoft.Maui.Controls.HotReload.Forms.dll": {
-            "assemblyVersion": "18.0.0.0",
-            "fileVersion": "18.9.1311.36310"
-          }
-        }
-      },
-      "Microsoft.VisualStudio.DesignTools.MobileTapContracts/18.0.0.0": {
-        "runtime": {
-          "Microsoft.VisualStudio.DesignTools.MobileTapContracts.dll": {
-            "assemblyVersion": "18.0.0.0",
-            "fileVersion": "18.9.1311.36310"
-          }
-        }
-      },
-      "Microsoft.VisualStudio.DesignTools.TapContract/18.0.0.0": {
-        "runtime": {
-          "Microsoft.VisualStudio.DesignTools.TapContract.dll": {
-            "assemblyVersion": "18.0.0.0",
-            "fileVersion": "18.9.1311.36310"
-          }
-        }
-      },
-      "Microsoft.VisualStudio.DesignTools.XamlTapContract/18.0.0.0": {
-        "runtime": {
-          "Microsoft.VisualStudio.DesignTools.XamlTapContract.dll": {
-            "assemblyVersion": "18.0.0.0",
-            "fileVersion": "18.9.1311.36310"
-          }
-        }
-      },
       "Microsoft.Web.WebView2.Core.Projection/1.0.3179.45": {
         "runtime": {
           "Microsoft.Web.WebView2.Core.Projection.dll": {
@@ -1022,26 +986,6 @@
       "sha512": "sha512-xJ5pTXiNSfwOzJVFcrUF1JROo63zjETJgIA4+ik/JxOJdNEv15e3NZ6bgpNQkyWhapcedP5HCa96hn9YCXwenw==",
       "path": "websocket.client/5.5.0",
       "hashPath": "websocket.client.5.5.0.nupkg.sha512"
-    },
-    "Microsoft.Maui.Controls.HotReload.Forms/18.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "Microsoft.VisualStudio.DesignTools.MobileTapContracts/18.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "Microsoft.VisualStudio.DesignTools.TapContract/18.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
-    },
-    "Microsoft.VisualStudio.DesignTools.XamlTapContract/18.0.0.0": {
-      "type": "reference",
-      "serviceable": false,
-      "sha512": ""
     },
     "Microsoft.Web.WebView2.Core.Projection/1.0.3179.45": {
       "type": "reference",

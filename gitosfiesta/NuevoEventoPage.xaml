@@ -134,12 +134,46 @@
                         </Frame>
                     </VerticalStackLayout>
 
-                    <Label Text="Extras Disponibles (Selecciona uno o varios):" FontAttributes="Bold" TextColor="#333"/>
-                    <Frame BorderColor="#DCDCDC" CornerRadius="8" BackgroundColor="#F8F9FA" Padding="10">
-                        <VerticalStackLayout x:Name="ContainerExtras" Spacing="8">
-                            <!-- Los extras se cargarán dinámicamente aquí -->
-                        </VerticalStackLayout>
-                    </Frame>
+                    <!-- 8. EXTRAS DISPONIBLES -->
+                    <VerticalStackLayout Spacing="5">
+                        <Label Text="Extras Disponibles (Selecciona uno o varios):" FontAttributes="Bold" TextColor="#333"/>
+
+                        <Frame BorderColor="#00D2C4" CornerRadius="8" BackgroundColor="#F8F9FA" Padding="10" MaximumHeightRequest="160">
+                            <ScrollView>
+                                <VerticalStackLayout Spacing="8">
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                        <CheckBox x:Name="ChkShowAnimador" Color="#00D2C4" CheckedChanged="OnExtraCheckedChanged" VerticalOptions="Center"/>
+                                        <Label Text="Show (1 animador y 1 botarga)" TextColor="Black" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                        <CheckBox x:Name="ChkDecoracionDeluxe" Color="#00D2C4" CheckedChanged="OnExtraCheckedChanged" VerticalOptions="Center"/>
+                                        <Label Text="Decoración Deluxe" TextColor="Black" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                        <CheckBox x:Name="ChkBotargaExtra" Color="#00D2C4" CheckedChanged="OnExtraCheckedChanged" VerticalOptions="Center"/>
+                                        <Label Text="Botarga extra" TextColor="Black" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                        <CheckBox x:Name="ChkShowPayaso" Color="#00D2C4" CheckedChanged="OnExtraCheckedChanged" VerticalOptions="Center"/>
+                                        <Label Text="Show de payaso" TextColor="Black" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                        <CheckBox x:Name="ChkHoraExtra" Color="#00D2C4" CheckedChanged="OnExtraCheckedChanged" VerticalOptions="Center"/>
+                                        <Label Text="Hora extra" TextColor="Black" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+
+                                    <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                                        <CheckBox x:Name="ChkRentaHoraExtra" Color="#00D2C4" CheckedChanged="OnExtraCheckedChanged" VerticalOptions="Center"/>
+                                        <Label Text="Renta de Hora Extra (Previa o Posterior)" TextColor="Black" FontSize="13" FontAttributes="Bold" VerticalOptions="Center"/>
+                                    </HorizontalStackLayout>
+                                </VerticalStackLayout>
+                            </ScrollView>
+                        </Frame>
+                    </VerticalStackLayout>
                     <VerticalStackLayout Spacing="4">
                         <Label Text="Observaciones / Notas para Staff" FontSize="13" TextColor="#333333" FontAttributes="Bold"/>
                         <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" HasShadow="False" BorderColor="#DCDCDC">

@@ -53,12 +53,179 @@ public partial class NuevoEventoPage : ContentPage
         else
         {
             LimpiarFormularioCompleto();
+            // Validación completamente silenciosa al abrir por primera vez (sin alertas)
+            await ValidarFechaSilenciosaAsync(DatePickerFecha.Date);
         }
+    }
+
+    private async Task ValidarFechaSilenciosaAsync(DateTime fecha)
+    {
+        _esFinDeSemana = fecha.DayOfWeek == DayOfWeek.Saturday || fecha.DayOfWeek == DayOfWeek.Sunday;
+
+        List<EventoModel> eventosEnFecha = new();
+        if (_supabaseClient != null)
+        {
+            string fechaStr = fecha.ToString("yyyy-MM-dd");
+            var query = await _supabaseClient
+                .From<EventoModel>()
+                .Filter("fecha_evento", Supabase.Postgrest.Constants.Operator.Equals, fechaStr)
+                .Get();
+
+            eventosEnFecha = query.Models ?? new List<EventoModel>();
+
+            if (_eventoId.HasValue)
+            {
+                eventosEnFecha = eventosEnFecha.Where(x => x.Id != _eventoId.Value).ToList();
+            }
+        }
+
+        if (!_esFinDeSemana)
+        {
+            PickerHorario.IsVisible = false;
+            PickerHorario.IsEnabled = false;
+            TimePickerEntreSemana.IsVisible = true;
+
+            if (eventosEnFecha.Count > 0)
+            {
+                TimePickerEntreSemana.IsEnabled = false;
+                _horaEntreSemanaSeleccionada = false;
+            }
+            else
+            {
+                TimePickerEntreSemana.IsEnabled = true;
+                _horaEntreSemanaSeleccionada = false;
+            }
+        }
+        else
+        {
+            PickerHorario.IsVisible = true;
+            TimePickerEntreSemana.IsVisible = false;
+            TimePickerEntreSemana.IsEnabled = false;
+
+            var horariosFinSemana = _catalogoMisc
+                .Where(x => x.categoria == "HORARIO" && x.value2 == "FIN_SEMANA")
+                .Select(x => x.value1)
+                .ToList();
+
+            var horasOcupadas = eventosEnFecha.Select(e => e.hora_evento.Hours).ToList();
+
+            var horariosDisponibles = new List<string>();
+            foreach (var h in horariosFinSemana)
+            {
+                bool esMatutino = h.Contains("2:00");
+                int horaEnInt = esMatutino ? 14 : 18;
+
+                if (!horasOcupadas.Contains(horaEnInt))
+                {
+                    horariosDisponibles.Add(h);
+                }
+            }
+
+            PickerHorario.ItemsSource = horariosDisponibles;
+            PickerHorario.SelectedIndex = -1;
+
+            if (horariosDisponibles.Count == 0)
+            {
+                PickerHorario.IsEnabled = false;
+            }
+            else
+            {
+                PickerHorario.IsEnabled = true;
+            }
+        }
+
+        EvaluarElegibilidadPromocion();
+    }
+
+    private async Task ActualizarControlHorarioSegunFechaAsync(DateTime fecha)
+    {
+        _esFinDeSemana = fecha.DayOfWeek == DayOfWeek.Saturday || fecha.DayOfWeek == DayOfWeek.Sunday;
+
+        List<EventoModel> eventosEnFecha = new();
+        if (_supabaseClient != null)
+        {
+            string fechaStr = fecha.ToString("yyyy-MM-dd");
+            var query = await _supabaseClient
+                .From<EventoModel>()
+                .Filter("fecha_evento", Supabase.Postgrest.Constants.Operator.Equals, fechaStr)
+                .Get();
+
+            eventosEnFecha = query.Models ?? new List<EventoModel>();
+
+            if (_eventoId.HasValue)
+            {
+                eventosEnFecha = eventosEnFecha.Where(x => x.Id != _eventoId.Value).ToList();
+            }
+        }
+
+        if (!_esFinDeSemana)
+        {
+            PickerHorario.IsVisible = false;
+            PickerHorario.IsEnabled = false;
+            TimePickerEntreSemana.IsVisible = true;
+
+            if (eventosEnFecha.Count > 0)
+            {
+                TimePickerEntreSemana.IsEnabled = false;
+                _horaEntreSemanaSeleccionada = false;
+                // Esta alerta solo se ejecuta cuando el usuario interactúa cambiando de fecha explícitamente
+                await DisplayAlert("Día Ocupado", "Este día entre semana ya cuenta con un evento registrado. Selecciona otra fecha.", "Aceptar");
+            }
+            else
+            {
+                TimePickerEntreSemana.IsEnabled = true;
+                _horaEntreSemanaSeleccionada = false;
+            }
+        }
+        else
+        {
+            PickerHorario.IsVisible = true;
+            TimePickerEntreSemana.IsVisible = false;
+            TimePickerEntreSemana.IsEnabled = false;
+
+            var horariosFinSemana = _catalogoMisc
+                .Where(x => x.categoria == "HORARIO" && x.value2 == "FIN_SEMANA")
+                .Select(x => x.value1)
+                .ToList();
+
+            var horasOcupadas = eventosEnFecha.Select(e => e.hora_evento.Hours).ToList();
+
+            var horariosDisponibles = new List<string>();
+            foreach (var h in horariosFinSemana)
+            {
+                bool esMatutino = h.Contains("2:00");
+                int horaEnInt = esMatutino ? 14 : 18;
+
+                if (!horasOcupadas.Contains(horaEnInt))
+                {
+                    horariosDisponibles.Add(h);
+                }
+            }
+
+            PickerHorario.ItemsSource = horariosDisponibles;
+            PickerHorario.SelectedIndex = -1;
+
+            if (horariosDisponibles.Count == 0)
+            {
+                PickerHorario.IsEnabled = false;
+                // Esta alerta solo se ejecuta cuando el usuario selecciona un fin de semana lleno
+                await DisplayAlert("Día Ocupado", "Los dos horarios de este fin de semana ya se encuentran ocupados.", "Aceptar");
+            }
+            else
+            {
+                PickerHorario.IsEnabled = true;
+            }
+        }
+
+        EvaluarElegibilidadPromocion();
     }
 
     private void LimpiarFormularioCompleto()
     {
         if (_eventoId.HasValue) return;
+
+        // Desvinculamos temporalmente el evento para evitar disparos accidentales
+        DatePickerFecha.DateSelected -= OnFechaSelected;
 
         TxtNombreCliente.Text = string.Empty;
         TxtTelefono.Text = string.Empty;
@@ -71,15 +238,22 @@ public partial class NuevoEventoPage : ContentPage
 
         DatePickerFecha.Date = DateTime.Today;
 
+        // Desmarcamos todos los checkboxes estáticos
+        if (ChkShowAnimador != null) ChkShowAnimador.IsChecked = false;
+        if (ChkDecoracionDeluxe != null) ChkDecoracionDeluxe.IsChecked = false;
+        if (ChkBotargaExtra != null) ChkBotargaExtra.IsChecked = false;
+        if (ChkShowPayaso != null) ChkShowPayaso.IsChecked = false;
+        if (ChkHoraExtra != null) ChkHoraExtra.IsChecked = false;
+        if (ChkRentaHoraExtra != null) ChkRentaHoraExtra.IsChecked = false;
+
         _horaEntreSemanaSeleccionada = false;
         PickerHorario.SelectedIndex = -1;
         PickerHorario.ItemsSource = null;
+        PickerHorario.IsEnabled = false;
 
         PickerPaquete.ItemsSource = null;
         PickerPaquete.IsEnabled = false;
         PickerPaquete.SelectedIndex = -1;
-
-        ConstruirControlesExtras(new List<string>(), new List<string>());
 
         if (PickerPromocion != null)
         {
@@ -89,6 +263,9 @@ public partial class NuevoEventoPage : ContentPage
         }
 
         BloquearPasosDesdePaquete();
+
+        // Volvemos a vincular el evento del DatePicker
+        DatePickerFecha.DateSelected += OnFechaSelected;
     }
 
     private async Task CargarDatosInicialesAsync()
@@ -97,24 +274,14 @@ public partial class NuevoEventoPage : ContentPage
         {
             if (_supabaseClient == null) return;
 
+            if (_catalogoMisc != null && _catalogoMisc.Count > 0) return;
+
             var response = await _supabaseClient
                 .From<MiscModel>()
                 .Where(x => x.enable == true)
                 .Get();
 
             _catalogoMisc = response.Models ?? new List<MiscModel>();
-
-            var extrasDisponibles = _catalogoMisc
-                .Where(x => x.categoria == "EXTRA")
-                .Select(x => x.value1)
-                .ToList();
-
-            ConstruirControlesExtras(extrasDisponibles, new List<string>());
-
-            if (!_eventoId.HasValue)
-            {
-                await ActualizarControlHorarioSegunFechaAsync(DatePickerFecha.Date);
-            }
         }
         catch (Exception ex)
         {
@@ -122,52 +289,39 @@ public partial class NuevoEventoPage : ContentPage
         }
     }
 
-    private void ConstruirControlesExtras(List<string> extrasDisponibles, List<string> extrasPreSeleccionados)
+    private void ConstruirControlesExtras(List<string> extrasPreSeleccionados)
     {
-        if (ContainerExtras == null) return;
-        ContainerExtras.Children.Clear();
-        _extrasSeleccionados = new List<string>(extrasPreSeleccionados);
+        _extrasSeleccionados = new List<string>(extrasPreSeleccionados ?? new List<string>());
 
-        foreach (var extra in extrasDisponibles)
+        // Sincronizamos el estado visual de los checkboxes estáticos
+        if (ChkShowAnimador != null) ChkShowAnimador.IsChecked = _extrasSeleccionados.Contains("Show (1 animador y 1 botarga)");
+        if (ChkDecoracionDeluxe != null) ChkDecoracionDeluxe.IsChecked = _extrasSeleccionados.Contains("Decoración Deluxe");
+        if (ChkBotargaExtra != null) ChkBotargaExtra.IsChecked = _extrasSeleccionados.Contains("Botarga extra");
+        if (ChkShowPayaso != null) ChkShowPayaso.IsChecked = _extrasSeleccionados.Contains("Show de payaso");
+        if (ChkHoraExtra != null) ChkHoraExtra.IsChecked = _extrasSeleccionados.Contains("Hora extra");
+        if (ChkRentaHoraExtra != null) ChkRentaHoraExtra.IsChecked = _extrasSeleccionados.Contains("Renta de Hora Extra (Previa o Posterior)");
+    }
+
+    private void OnExtraCheckedChanged(object sender, CheckedChangedEventArgs e)
+    {
+        if (sender is CheckBox checkBox && checkBox.Parent is HorizontalStackLayout layout)
         {
-            var horizontalLayout = new HorizontalStackLayout
+            var label = layout.Children.FirstOrDefault(c => c is Label) as Label;
+            if (label != null)
             {
-                Spacing = 10,
-                VerticalOptions = LayoutOptions.Center
-            };
-
-            var checkBox = new CheckBox
-            {
-                IsChecked = _extrasSeleccionados.Contains(extra),
-                VerticalOptions = LayoutOptions.Center
-            };
-
-            checkBox.CheckedChanged += (s, e) =>
-            {
+                string nombreExtra = label.Text;
                 if (e.Value)
                 {
-                    if (!_extrasSeleccionados.Contains(extra))
-                        _extrasSeleccionados.Add(extra);
+                    if (!_extrasSeleccionados.Contains(nombreExtra))
+                        _extrasSeleccionados.Add(nombreExtra);
                 }
                 else
                 {
-                    if (_extrasSeleccionados.Contains(extra))
-                        _extrasSeleccionados.Remove(extra);
+                    if (_extrasSeleccionados.Contains(nombreExtra))
+                        _extrasSeleccionados.Remove(nombreExtra);
                 }
                 CalcularPrecioTotalConExtras();
-            };
-
-            var label = new Label
-            {
-                Text = extra,
-                TextColor = Color.FromArgb("#333333"),
-                FontSize = 13,
-                VerticalOptions = LayoutOptions.Center
-            };
-
-            horizontalLayout.Children.Add(checkBox);
-            horizontalLayout.Children.Add(label);
-            ContainerExtras.Children.Add(horizontalLayout);
+            }
         }
     }
 
@@ -233,29 +387,31 @@ public partial class NuevoEventoPage : ContentPage
             }
 
             List<string> extrasPreSeleccionados = new();
-            if (!string.IsNullOrEmpty(evento.promocion) && evento.promocion.Contains("Extra:"))
+            if (!string.IsNullOrEmpty(evento.promocion))
             {
-                var partesPromo = evento.promocion.Split('|');
-                foreach (var parte in partesPromo)
+                if (evento.promocion.Contains("Extra:"))
                 {
-                    if (parte.Contains("Extra:"))
+                    var partesPromo = evento.promocion.Split('|');
+                    foreach (var parte in partesPromo)
                     {
-                        string listaExtras = parte.Replace("Extra:", "").Trim();
-                        extrasPreSeleccionados = listaExtras.Split(',').Select(x => x.Trim()).ToList();
+                        if (parte.Contains("Extra:"))
+                        {
+                            string listaExtras = parte.Replace("Extra:", "").Trim();
+                            extrasPreSeleccionados = listaExtras.Split(',').Select(x => x.Trim()).ToList();
+                        }
+                        else if (PickerPromocion != null && PickerPromocion.IsEnabled)
+                        {
+                            PickerPromocion.SelectedItem = parte.Trim();
+                        }
                     }
-                    else if (PickerPromocion != null && PickerPromocion.IsEnabled)
-                    {
-                        PickerPromocion.SelectedItem = parte.Trim();
-                    }
+                }
+                else if (PickerPromocion != null && PickerPromocion.IsEnabled)
+                {
+                    PickerPromocion.SelectedItem = evento.promocion.Trim();
                 }
             }
 
-            var extrasDisponibles = _catalogoMisc
-                .Where(x => x.categoria == "EXTRA")
-                .Select(x => x.value1)
-                .ToList();
-
-            ConstruirControlesExtras(extrasDisponibles, extrasPreSeleccionados);
+            ConstruirControlesExtras(extrasPreSeleccionados);
         }
         catch (Exception ex)
         {
@@ -267,85 +423,6 @@ public partial class NuevoEventoPage : ContentPage
     {
         await ActualizarControlHorarioSegunFechaAsync(e.NewDate);
         BloquearPasosDesdeHorario();
-    }
-
-    private async Task ActualizarControlHorarioSegunFechaAsync(DateTime fecha)
-    {
-        _esFinDeSemana = fecha.DayOfWeek == DayOfWeek.Saturday || fecha.DayOfWeek == DayOfWeek.Sunday;
-
-        List<EventoModel> eventosEnFecha = new();
-        if (_supabaseClient != null)
-        {
-            string fechaStr = fecha.ToString("yyyy-MM-dd");
-            var query = await _supabaseClient
-                .From<EventoModel>()
-                .Filter("fecha_evento", Supabase.Postgrest.Constants.Operator.Equals, fechaStr)
-                .Get();
-
-            eventosEnFecha = query.Models ?? new List<EventoModel>();
-
-            if (_eventoId.HasValue)
-            {
-                eventosEnFecha = eventosEnFecha.Where(x => x.Id != _eventoId.Value).ToList();
-            }
-        }
-
-        if (!_esFinDeSemana)
-        {
-            PickerHorario.IsVisible = false;
-            TimePickerEntreSemana.IsVisible = true;
-
-            if (eventosEnFecha.Count > 0)
-            {
-                TimePickerEntreSemana.IsEnabled = false;
-                _horaEntreSemanaSeleccionada = false;
-                await DisplayAlert("Día Ocupado", "Este día entre semana ya cuenta con un evento registrado. Selecciona otra fecha.", "Aceptar");
-            }
-            else
-            {
-                TimePickerEntreSemana.IsEnabled = true;
-                _horaEntreSemanaSeleccionada = false;
-            }
-        }
-        else
-        {
-            PickerHorario.IsVisible = true;
-            TimePickerEntreSemana.IsVisible = false;
-
-            var horariosFinSemana = _catalogoMisc
-                .Where(x => x.categoria == "HORARIO" && x.value2 == "FIN_SEMANA")
-                .Select(x => x.value1)
-                .ToList();
-
-            var horasOcupadas = eventosEnFecha.Select(e => e.hora_evento.Hours).ToList();
-
-            var horariosDisponibles = new List<string>();
-            foreach (var h in horariosFinSemana)
-            {
-                bool esMatutino = h.Contains("2:00");
-                int horaEnInt = esMatutino ? 14 : 18;
-
-                if (!horasOcupadas.Contains(horaEnInt))
-                {
-                    horariosDisponibles.Add(h);
-                }
-            }
-
-            PickerHorario.ItemsSource = horariosDisponibles;
-            PickerHorario.SelectedIndex = -1;
-
-            if (horariosDisponibles.Count == 0)
-            {
-                PickerHorario.IsEnabled = false;
-                await DisplayAlert("Día Ocupado", "Los dos horarios de este fin de semana ya se encuentran ocupados.", "Aceptar");
-            }
-            else
-            {
-                PickerHorario.IsEnabled = true;
-            }
-        }
-
-        EvaluarElegibilidadPromocion();
     }
 
     private void OnHorarioSelectedIndexChanged(object sender, EventArgs e)
@@ -636,7 +713,7 @@ public partial class NuevoEventoPage : ContentPage
                 var eventoActualizado = new EventoModel
                 {
                     Id = _eventoId.Value,
-                    nombre_cliente = TxtNombreCliente.Text.Trim(),
+                    nombre_cliente = TTxtNombreClienteTrim(TxtNombreCliente.Text),
                     telefono_cliente = telefonoLimpio,
                     tipo_evento = TxtTipoEvento.Text.Trim(),
                     fecha_evento = DatePickerFecha.Date,
@@ -703,4 +780,6 @@ public partial class NuevoEventoPage : ContentPage
             await DisplayAlert("Error al guardar", $"No se pudo procesar el evento: {ex.Message}", "Aceptar");
         }
     }
+
+    private string TTxtNombreClienteTrim(string texto) => texto?.Trim() ?? string.Empty;
 }

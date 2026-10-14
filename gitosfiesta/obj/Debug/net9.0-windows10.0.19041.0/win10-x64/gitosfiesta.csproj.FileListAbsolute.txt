@@ -432,10 +432,6 @@ C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0
 C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.WindowsAppRuntime.Bootstrap.dll
 C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.Windows.SDK.NET.dll
 C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\WinRT.Runtime.dll
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.Maui.Controls.HotReload.Forms.dll
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.VisualStudio.DesignTools.MobileTapContracts.dll
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.VisualStudio.DesignTools.TapContract.dll
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.VisualStudio.DesignTools.XamlTapContract.dll
 C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.Web.WebView2.Core.Projection.dll
 C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.UI.pri
 C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Debug\net9.0-windows10.0.19041.0\win10-x64\Microsoft.UI.Xaml.Controls.pri
