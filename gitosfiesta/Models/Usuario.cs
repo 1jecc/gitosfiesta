@@ -6,7 +6,7 @@ namespace gitosfiesta.Models;
 [Table("gitosfiesta_usuarios")]
 public class Usuario : BaseModel
 {
-    [PrimaryKey("id", true)]
+    [PrimaryKey("id", false)]
     public long Id { get; set; }
 
     [Column("nombre")]

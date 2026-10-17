@@ -36,15 +36,27 @@ public partial class ListaEventoPage : ContentPage
     {
         try
         {
-            // Traemos todos los eventos de la base de datos
-            var response = await _supabaseClient
+            // 1. Preparamos la consulta base (solo eventos habilitados)
+            var query = _supabaseClient
                 .From<EventoModel>()
-                .Where(x => x.enable == true)
-                .Get();
+                .Where(x => x.enable == true);
+
+            // ==========================================================
+            // REGLA DE NEGOCIO (PUNTO 3): 
+            // Si es STAFF, solo ve los que él creó o se le asignaron
+            // ==========================================================
+            if (SessionContext.Rol?.ToUpper() == "STAFF")
+            {
+                query = query.Filter("usuario_creacion_id", Supabase.Postgrest.Constants.Operator.Equals, SessionContext.UsuarioId);
+            }
+
+            // Ejecutamos la consulta a Supabase
+            var response = await query.Get();
 
             // Los ordenamos por fecha, para que los más próximos salgan primero
             _todosLosEventos = response.Models?.OrderBy(e => e.fecha_evento).ToList() ?? new List<EventoModel>();
 
+            // Aplicamos el filtro visual de Vigentes/Caducados
             AplicarFiltro();
         }
         catch (Exception ex)
