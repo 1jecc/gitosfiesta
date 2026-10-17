@@ -41,10 +41,10 @@ public partial class UsuariosPage : ContentPage
         string nombre = TxtNuevoNombre.Text?.Trim() ?? "";
         string apellido = TxtNuevoApellido.Text?.Trim() ?? "";
 
-        string parteNombre = nombre.Length >= 2 ? nombre.Substring(0, 2) : nombre;
-        string parteApellido = apellido.Length >= 2 ? apellido.Substring(0, 2) : apellido;
+        string nombreCompleto = nombre.Replace(" ", "");
+        string parteApellido = apellido.Length >= 3 ? apellido.Substring(0, 3) : apellido;
 
-        TxtNuevoUsuario.Text = (parteNombre + parteApellido).ToUpper();
+        TxtNuevoUsuario.Text = (nombreCompleto + parteApellido).ToUpper();
     }
 
     private async void OnCrearUsuarioClicked(object sender, EventArgs e)

@@ -48,6 +48,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <MauiXaml Update="AbonosPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="ContratoPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
