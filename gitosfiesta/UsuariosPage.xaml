@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="gitosfiesta.UsuariosPage"
+             Title="Gestión de Usuarios"
+             BackgroundColor="#E9F7F8">
+
+    <ScrollView Padding="20">
+        <VerticalStackLayout Spacing="25" HorizontalOptions="Center" MaximumWidthRequest="500">
+
+            <!-- APARTADO: Crear Usuario -->
+            <Frame x:Name="PanelCrearUsuario" BackgroundColor="White" CornerRadius="20" HasShadow="True" Padding="20" BorderColor="#00D2C4">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Crear Nuevo Usuario" FontSize="18" FontAttributes="Bold" TextColor="#1A3C40" />
+                    <Label Text="Registra a un nuevo usuario (Administrador o Staff)" FontSize="14" TextColor="#666666" />
+
+                    <Entry x:Name="TxtNuevoNombre" Placeholder="Nombre(s)" BackgroundColor="#F8F8FA" TextColor="#333" TextChanged="OnNombreOApellidoChanged"/>
+                    <Entry x:Name="TxtNuevoApellido" Placeholder="Apellido Paterno" BackgroundColor="#F8F8FA" TextColor="#333" TextChanged="OnNombreOApellidoChanged"/>
+                    <Entry x:Name="TxtNuevoUsuario" Placeholder="Usuario generado auto." BackgroundColor="#EAEAEA" TextColor="#555" IsReadOnly="True" FontAttributes="Bold"/>
+                    <Entry x:Name="TxtNuevaPassword" Placeholder="Contraseña" IsPassword="True" BackgroundColor="#F8F8FA" TextColor="#333"/>
+
+                    <Picker x:Name="PickerRol" Title="Selecciona el Rol" BackgroundColor="#F8F9FA" TextColor="#333">
+                        <Picker.ItemsSource>
+                            <x:Array Type="{x:Type x:String}">
+                                <x:String>ADMINISTRADOR</x:String>
+                                <x:String>STAFF</x:String>
+                            </x:Array>
+                        </Picker.ItemsSource>
+                    </Picker>
+
+                    <Button Text="Guardar Usuario" BackgroundColor="#00D2C4" TextColor="White" FontAttributes="Bold" CornerRadius="14" HeightRequest="48" Clicked="OnCrearUsuarioClicked" Margin="0,10,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- APARTADO: Eliminar Usuario -->
+            <Frame x:Name="PanelEliminarUsuario" BackgroundColor="White" CornerRadius="20" HasShadow="True" Padding="20" BorderColor="#E57373">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Eliminar Usuario" FontSize="18" FontAttributes="Bold" TextColor="#1A3C40" />
+                    <Label Text="Selecciona un usuario para eliminarlo permanentemente del sistema." FontSize="14" TextColor="#666666" />
+
+                    <Picker x:Name="PickerUsuariosAEliminar" ItemDisplayBinding="{Binding NombreUsuario}" Title="Selecciona el usuario a eliminar" BackgroundColor="#F8F9FA" TextColor="#333" />
+
+                    <Button Text="Eliminar Usuario" BackgroundColor="#E57373" TextColor="White" FontAttributes="Bold" CornerRadius="14" HeightRequest="48" Clicked="OnEliminarUsuarioClicked" Margin="0,10,0,0" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <Label x:Name="LblAccesoDenegado" Text="No tienes permisos de Administrador para ver esta sección." TextColor="Red" FontSize="16" FontAttributes="Bold" HorizontalOptions="Center" IsVisible="False" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>
