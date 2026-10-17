@@ -51,6 +51,9 @@
 	  <MauiXaml Update="ContratoPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>
+	  <MauiXaml Update="ListaEventoPage.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </MauiXaml>
 	  <MauiXaml Update="NuevoEventoPage.xaml">
 	    <Generator>MSBuild:Compile</Generator>
 	  </MauiXaml>

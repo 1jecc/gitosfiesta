@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="gitosfiesta.ListaEventoPage"
+             Title="Lista de Eventos"
+             BackgroundColor="#E2F2F4">
+
+    <Grid RowDefinitions="Auto, *" Padding="20">
+
+        <!-- Filtro Superior -->
+        <VerticalStackLayout Grid.Row="0" Spacing="8" Margin="0,0,0,15">
+            <Label Text="Filtrar eventos:" FontAttributes="Bold" TextColor="#333" />
+            <Frame CornerRadius="10" Padding="8" BackgroundColor="#F8F9FA" BorderColor="#DCDCDC" HasShadow="False">
+                <Picker x:Name="PickerFiltro" 
+                        Title="Selecciona un filtro"
+                        TextColor="#333"
+                        SelectedIndexChanged="OnFiltroChanged">
+                    <Picker.ItemsSource>
+                        <x:Array Type="{x:Type x:String}">
+                            <x:String>Vigentes (Próximos)</x:String>
+                            <x:String>Caducados (Pasados)</x:String>
+                            <x:String>Todos</x:String>
+                        </x:Array>
+                    </Picker.ItemsSource>
+                </Picker>
+            </Frame>
+        </VerticalStackLayout>
+
+        <!-- Lista de Eventos -->
+        <CollectionView x:Name="ColeccionEventos" Grid.Row="1">
+            <CollectionView.EmptyView>
+                <Label Text="No se encontraron eventos para este filtro." 
+                       HorizontalOptions="Center" 
+                       VerticalOptions="Center" 
+                       TextColor="#888" />
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Frame BackgroundColor="White"
+                           CornerRadius="15"
+                           HasShadow="True"
+                           Padding="15"
+                           Margin="0,0,0,15"
+                           BorderColor="#00D2C4">
+                        <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, Auto">
+
+                            <!-- Nombre del Cliente y Fecha -->
+                            <Label Grid.Row="0" Grid.Column="0" 
+                                   Text="{Binding nombre_cliente}" 
+                                   FontAttributes="Bold" 
+                                   FontSize="16" 
+                                   TextColor="#333"/>
+
+                            <Label Grid.Row="0" Grid.Column="1" 
+                                   Text="{Binding fecha_evento, StringFormat='{0:dd/MM/yyyy}'}" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#00D2C4"/>
+
+                            <!-- Tipo de Evento -->
+                            <Label Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" 
+                                   Text="{Binding tipo_evento}" 
+                                   FontSize="14" 
+                                   TextColor="#666" 
+                                   Margin="0,5,0,0"/>
+
+                            <!-- Estatus y Precio -->
+                            <Label Grid.Row="2" Grid.Column="0" 
+                                   Text="{Binding estatus}" 
+                                   FontSize="12" 
+                                   TextColor="#E91E63" 
+                                   FontAttributes="Italic"
+                                   Margin="0,5,0,0"/>
+
+                            <Label Grid.Row="2" Grid.Column="1" 
+                                   Text="{Binding precio, StringFormat='${0:F2}'}" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold" 
+                                   TextColor="#333" 
+                                   VerticalOptions="End"/>
+                        </Grid>
+                    </Frame>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+    </Grid>
+</ContentPage>

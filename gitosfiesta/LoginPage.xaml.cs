@@ -169,8 +169,40 @@ public partial class LoginPage : ContentPage
                 }
             };
 
+            // Boton cerrar sesion 
+            var btnCerrarSesion = new Button
+            {
+                Text = "Salir",
+                BackgroundColor = Color.FromArgb("#E57373"),
+                TextColor = Colors.White,
+                FontAttributes = FontAttributes.Bold,
+                CornerRadius = 8,
+                HeightRequest = 35,
+                Padding = new Thickness(15, 0),
+                VerticalOptions = LayoutOptions.Center
+            };
+
+            btnCerrarSesion.Clicked += async (s, e) =>
+            {
+                bool confirmar = await Application.Current!.MainPage!.DisplayAlert(
+                    "Cerrar Sesi[on",
+                    "Estas seguro de que deseas cerrar sesion?",
+                    "Si, salir",
+                    "Cancelar");
+                if (confirmar)
+                {
+                    SessionContext.UsuarioId = 0;
+                    SessionContext.NombreCompleto = string.Empty;
+                    SessionContext.Rol = string.Empty;
+
+                    Application.Current.Windows[0].Page = new LoginPage();
+                }
+            };
+
             Grid.SetColumn(userDetails, 0);
+            Grid.SetColumn(btnCerrarSesion, 1); 
             footerLayout.Children.Add(userDetails);
+            footerLayout.Children.Add(btnCerrarSesion);
             shell.FlyoutFooter = footerLayout;
 
             // 5. Cargar los elementos del menú

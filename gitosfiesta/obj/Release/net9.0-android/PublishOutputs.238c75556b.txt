@@ -1,3 +1,0 @@
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Release\net9.0-android\publish\com.companyname.gitosfiesta-Signed.apk
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Release\net9.0-android\publish\com.companyname.gitosfiesta.apk
-C:\Users\jorge\source\repos\gitosfiesta\gitosfiesta\bin\Release\net9.0-android\publish\_Microsoft.Android.Resource.Designer.dll
