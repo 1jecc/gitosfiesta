@@ -61,4 +61,7 @@ public class EventoModel : BaseModel
 
     [Column("paquete")]
     public string? paquete { get; set; }
+
+    [Column("saldo")]
+    public decimal Saldo { get; set; } // O 'saldo' según cómo mapees tus columnas de Supabase
 }

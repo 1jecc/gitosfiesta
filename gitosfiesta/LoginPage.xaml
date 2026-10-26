@@ -40,7 +40,9 @@
                                    Placeholder="Escribe tu usuario" 
                                    TextColor="#333" 
                                    PlaceholderColor="#AAA"
-                                   BackgroundColor="Transparent"/>
+                                   BackgroundColor="Transparent"
+                                   ReturnType="Next"
+                                   Completed="OnUsuarioCompleted"/>
                         </Frame>
                     </VerticalStackLayout>
 
@@ -53,7 +55,9 @@
                                    IsPassword="True" 
                                    TextColor="#333" 
                                    PlaceholderColor="#AAA"
-                                   BackgroundColor="Transparent"/>
+                                   BackgroundColor="Transparent"
+                                   ReturnType="Done"
+                                   Completed="OnPasswordCompleted"/>
                         </Frame>
                     </VerticalStackLayout>
 

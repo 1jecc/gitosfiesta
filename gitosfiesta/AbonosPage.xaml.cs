@@ -135,6 +135,7 @@ public partial class AbonosPage : ContentPage
 
         try
         {
+            // 1. Guardar el nuevo abono en la tabla de abonos
             var nuevoAbono = new AbonoModel
             {
                 EventoId = _eventoSeleccionado.Id,
@@ -146,12 +147,21 @@ public partial class AbonosPage : ContentPage
 
             await _supabaseClient.From<AbonoModel>().Insert(nuevoAbono);
 
-            if (montoNuevo == _saldoPendienteActual)
+            // 2. Calcular el nuevo saldo que va a quedar pendiente
+            decimal nuevoSaldoRestante = _saldoPendienteActual - montoNuevo;
+
+            // 3. Actualizar el evento en Supabase (Estatus y Saldo)
+            if (nuevoSaldoRestante <= 0)
             {
+                // Si cubre todo o queda a favor, se liquida
                 _eventoSeleccionado.estatus = "Liquidado";
+                _eventoSeleccionado.Saldo = 0;
+
                 await _supabaseClient.From<EventoModel>()
                     .Where(x => x.Id == _eventoSeleccionado.Id)
-                    .Update(_eventoSeleccionado);
+                    .Set(x => x.estatus, "Liquidado")
+                    .Set(x => x.Saldo, 0)
+                    .Update();
 
                 await DisplayAlert("¡Cuenta Liquidada!", "El pago se ha registrado y el evento está totalmente pagado.", "Aceptar");
 
@@ -164,7 +174,17 @@ public partial class AbonosPage : ContentPage
             }
             else
             {
+                // Si es un abono parcial, actualizamos el saldo restado en la base de datos
+                _eventoSeleccionado.Saldo = nuevoSaldoRestante;
+
+                await _supabaseClient.From<EventoModel>()
+                    .Where(x => x.Id == _eventoSeleccionado.Id)
+                    .Set(x => x.Saldo, nuevoSaldoRestante)
+                    .Update();
+
                 await DisplayAlert("Abono Exitoso", $"Se ha registrado el pago de ${montoNuevo:F2} correctamente.", "Aceptar");
+
+                // Recargar la información del evento seleccionado para refrescar los montos en pantalla
                 OnEventoSeleccionado(null, EventArgs.Empty);
             }
         }
@@ -173,4 +193,5 @@ public partial class AbonosPage : ContentPage
             await DisplayAlert("Error al guardar", $"Hubo un problema registrando el pago: {ex.Message}", "Aceptar");
         }
     }
+    
 }

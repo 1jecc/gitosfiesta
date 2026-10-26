@@ -15,6 +15,18 @@ public partial class LoginPage : ContentPage
         _supabaseClient = App.SupabaseClient;
     }
 
+    // Evento al presionar Enter en Usuario -> Salta al Password
+    private void OnUsuarioCompleted(object sender, EventArgs e)
+    {
+        TxtPassword.Focus();
+    }
+
+    // Evento al presionar Enter en Password -> Inicia sesión automáticamente
+    private void OnPasswordCompleted(object sender, EventArgs e)
+    {
+        OnLoginClicked(sender, e);
+    }
+
     private async void OnLoginClicked(object sender, EventArgs e)
     {
         string usuario = TxtUsuario.Text?.Trim() ?? string.Empty;
@@ -93,7 +105,7 @@ public partial class LoginPage : ContentPage
             Shell.SetForegroundColor(shell, Colors.White);
             Shell.SetTitleColor(shell, Colors.White);
 
-            // 2. Encabezado superior con la marca Gitos Fiesta (al estilo de la imagen)
+            // 2. Encabezado superior con la marca Gitos Fiesta
             var headerLayout = new VerticalStackLayout
             {
                 Padding = new Thickness(20, 35, 20, 15),
@@ -111,7 +123,7 @@ public partial class LoginPage : ContentPage
 
             shell.FlyoutHeader = headerLayout;
 
-            // 3. Plantilla de botones del menú (Estilo tarjeta suave con bordes redondeados)
+            // 3. Plantilla de botones del menú
             shell.ItemTemplate = new DataTemplate(() =>
             {
                 var border = new Border
@@ -136,7 +148,7 @@ public partial class LoginPage : ContentPage
                 return border;
             });
 
-            // 4. Pie de página del menú (Perfil del Usuario abajo, como en la imagen de referencia)
+            // 4. Pie de página del menú (Perfil del Usuario y Botón Salir)
             var footerLayout = new Grid
             {
                 Padding = new Thickness(20, 15),
@@ -169,7 +181,6 @@ public partial class LoginPage : ContentPage
                 }
             };
 
-            // Boton cerrar sesion 
             var btnCerrarSesion = new Button
             {
                 Text = "Salir",
@@ -185,9 +196,9 @@ public partial class LoginPage : ContentPage
             btnCerrarSesion.Clicked += async (s, e) =>
             {
                 bool confirmar = await Application.Current!.MainPage!.DisplayAlert(
-                    "Cerrar Sesi[on",
-                    "Estas seguro de que deseas cerrar sesion?",
-                    "Si, salir",
+                    "Cerrar Sesión",
+                    "¿Estás seguro de que deseas cerrar sesión?",
+                    "Sí, salir",
                     "Cancelar");
                 if (confirmar)
                 {
@@ -200,7 +211,7 @@ public partial class LoginPage : ContentPage
             };
 
             Grid.SetColumn(userDetails, 0);
-            Grid.SetColumn(btnCerrarSesion, 1); 
+            Grid.SetColumn(btnCerrarSesion, 1);
             footerLayout.Children.Add(userDetails);
             footerLayout.Children.Add(btnCerrarSesion);
             shell.FlyoutFooter = footerLayout;
