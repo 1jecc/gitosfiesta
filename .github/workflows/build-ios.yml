@@ -1,1 +1,27 @@
+name: Compilar Gitos Fiesta iOS
 
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout del código
+      uses: actions/checkout@v4
+
+    - name: Configurar .NET SDK
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+
+    - name: Instalar cargas de trabajo de .NET MAUI
+      run: |
+        dotnet workload restore
+        dotnet workload install maui-ios
+
+    - name: Compilar proyecto iOS
+      run: |
+        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release
