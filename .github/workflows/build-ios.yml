@@ -20,8 +20,12 @@ jobs:
     - name: Instalar cargas de trabajo de .NET MAUI
       run: |
         dotnet workload restore
-        dotnet workload install maui-ios
+        dotnet workload install maui
 
     - name: Compilar proyecto iOS
       run: |
         dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release
+      env:
+        # Esto le permite a .NET usar la versión de Xcode instalada en el runner sin bloquear por el parche menor
+        MD_APPLE_SDK_LOCK_ITERS: "1"
+        XCODE_DEVELOPER_DIR_PATH: "/Applications/Xcode.app"
