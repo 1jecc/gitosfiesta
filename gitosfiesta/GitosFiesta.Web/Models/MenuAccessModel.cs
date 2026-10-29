@@ -1,7 +1,8 @@
 ﻿using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-namespace gitosfiesta.Models
+namespace GitosFiesta.Web.Models;
+
 {
     [Table("gitosfiesta_menuaccess")]
     public class MenuAccessModel : BaseModel
