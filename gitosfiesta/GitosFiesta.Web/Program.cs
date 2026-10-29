@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using GitosFiesta.Web;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -18,9 +19,7 @@ var options = new Supabase.SupabaseOptions
 };
 
 var supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
-
-// Lo registramos como un servicio singleton global para que cualquier página lo use
 builder.Services.AddSingleton(supabaseClient);
 // ----------------------------------------
 
-await builder.Build().AddScopedSupabaseSession(); // o builder.Build().RunAsync();
+await builder.Build().RunAsync();
