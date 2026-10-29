@@ -1,30 +1,43 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+<div class="top-row ps-3 navbar navbar-dark" style="background-color: #00D2C4;">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">GitosFiesta.Web</a>
+        <a class="navbar-brand" href="">GitosFiesta</a>
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="nav flex-column">
+<div class="nav-scrollable">
+    <nav class="flex-column">
+        <!-- Módulo Nuevo Evento -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="nav-link" href="nuevo-evento">
+                <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Nuevo Evento
             </NavLink>
         </div>
 
+        <!-- Módulo Lista de Eventos -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
+            <NavLink class="nav-link" href="lista-eventos">
+                <span class="bi bi-list-nested" aria-hidden="true"></span> Lista de Eventos
             </NavLink>
         </div>
 
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
+        <!-- Botón Salir / Cerrar Sesión -->
+        <div class="nav-item px-3 mt-4">
+            <button class="btn btn-danger w-100 text-white fw-bold" @click="CerrarSesion">
+                Salir
+            </button>
         </div>
     </nav>
 </div>
 
+@code {
+    @inject NavigationManager Navigation
+
+    private void CerrarSesion()
+    {
+        SessionContext.UsuarioId = 0;
+        SessionContext.NombreCompleto = string.Empty;
+        SessionContext.Rol = string.Empty;
+        
+        Navigation.NavigateTo("/");
+    }
+}
