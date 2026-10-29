@@ -19,8 +19,16 @@ jobs:
       - name: Compilar y publicar la app Blazor Web
         run: |
           dotnet publish gitosfiesta/GitosFiesta.Web/GitosFiesta.Web.csproj -c Release -o release /p:RunAOTCompilation=false
-          touch release/wwwroot/.nojekyll
-          cp release/wwwroot/index.html release/wwwroot/404.html
+          
+          # Verificamos dónde se generó wwwroot y aseguramos los archivos de configuración
+          if [ -d "release/wwwroot" ]; then
+            touch release/wwwroot/.nojekyll
+            cp release/wwwroot/index.html release/wwwroot/404.html
+          elif [ -d "release/GitosFiesta.Web/dist" ]; then
+            cp -r release/GitosFiesta.Web/dist/* release/
+            touch release/.nojekyll
+            cp release/index.html release/404.html
+          fi
 
       - name: Subir artefacto para GitHub Pages
         uses: actions/upload-pages-artifact@v3
