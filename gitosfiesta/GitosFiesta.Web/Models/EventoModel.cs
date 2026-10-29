@@ -1,7 +1,7 @@
-
-﻿using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
-namespace gitosfiesta.Models;
+
+namespace GitosFiesta.Web.Models;
 
 [Table("gitosfiesta_eventos")]
 public class EventoModel : BaseModel
@@ -64,5 +64,5 @@ public class EventoModel : BaseModel
     public string? paquete { get; set; }
 
     [Column("saldo")]
-    public decimal Saldo { get; set; } // O 'saldo' según cómo mapees tus columnas de Supabase
+    public decimal Saldo { get; set; }
 }
