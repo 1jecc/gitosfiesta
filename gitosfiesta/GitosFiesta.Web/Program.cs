@@ -1,7 +1,8 @@
+
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using GitosFiesta.Web;
-using GitosFiesta.Web.Components; // <--- Agrega esta línea para encontrar el componente App
+using GitosFiesta.Web.Components;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -15,7 +16,7 @@ var supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIs
 
 var options = new Supabase.SupabaseOptions
 {
-    AutoConnectRealtime = true
+    AutoConnectRealtime = false
 };
 
 var supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
