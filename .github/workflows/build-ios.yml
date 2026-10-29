@@ -1,4 +1,4 @@
-name: Compilar Gitos Fiesta iOS
+name: Compilar Gitos Fiesta iOS (.ipa)
 
 on:
   push:
@@ -29,10 +29,17 @@ jobs:
 
     - name: Omitir recursos de iconos faltantes
       run: |
-        # Remueve las referencias a MauiIcon del csproj para evitar el error de actool
-        sed -i '' '/MauiIcon/d' gitosfiesta/gitosfiesta.csproj
-        sed -i '' '/MauiSplashScreen/d' gitosfiesta/gitosfiesta.csproj
+        sed -i '' '/MauiIcon/d' gitosfiesta/gitosfiesta.csproj || true
+        sed -i '' '/MauiSplashScreen/d' gitosfiesta/gitosfiesta.csproj || true
 
-    - name: Compilar proyecto iOS
+    - name: Compilar y empaquetar .ipa para iOS
       run: |
-        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:UseSimulator=true /p:EnableCodeSigning=false /p:CheckForUnsupportedXcode=false
+        dotnet publish gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release -r ios-arm64 /p:ArchiveOnBuild=true /p:EnableCodeSigning=false /p:CheckForUnsupportedXcode=false
+
+    - name: Subir ejecutable .ipa como Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: GitosFiesta-iOS
+        path: |
+          gitosfiesta/bin/Release/net9.0-ios/ios-arm64/publish/*.ipa
+          gitosfiesta/bin/Release/net9.0-ios/ios-arm64/*.app
