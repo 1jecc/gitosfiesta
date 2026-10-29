@@ -35,9 +35,11 @@
     {
         try
         {
-            // Consultamos la tabla completa y validamos de forma segura en memoria (C# LINQ)
-            // Esto evita por completo cualquier fallo de codificación de URL en WebAssembly
-            var response = await SupabaseClient.From<Usuario>().Get();
+            // Forzamos explícitamente el nombre de la tabla de Supabase para evitar errores de ruta en WebAssembly
+            var response = await SupabaseClient
+                .From<Usuario>()
+                .Table("gitosfiesta_usuarios")
+                .Get();
 
             var userFound = response.Models.FirstOrDefault(x => 
                 x.NombreUsuario == loginModel.Usuario && 
