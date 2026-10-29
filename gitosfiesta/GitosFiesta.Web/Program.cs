@@ -10,7 +10,7 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
 // --- CONFIGURACIÓN GLOBAL DE SUPABASE ---
-var supabaseUrl = "https://qokxfxhkbdoqgvlnzruh.supabase.co";
+var supabaseUrl = "https://qokxfxhkbdoqgvlnzruh.supabase.co/";
 var supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3hmaHhrYmRvcWd2bG56cnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNDY4MjEsImV4cCI6MjEwNjgyMjgyMX0.HiRxtNy_Q4MlVZP59Yj8vhX4oPzHs3R58TSd4P1Qbpg";
 
 var options = new Supabase.SupabaseOptions
