@@ -10,6 +10,8 @@ jobs:
     
     permissions:
       contents: write
+      pages: write
+      id-token: write
 
     steps:
       - name: Descargar el código del repositorio
@@ -25,7 +27,14 @@ jobs:
           dotnet publish gitosfiesta/GitosFiesta.Web/GitosFiesta.Web.csproj -c Release -o release
           touch release/wwwroot/.nojekyll
 
-      - name: Desplegar en GitHub Pages
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Configurar páginas de GitHub
+        uses: actions/configure-pages@v4
+
+      - name: Subir artefacto para GitHub Pages
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: release/wwwroot
+          path: 'release/wwwroot'
+
+      - name: Desplegar en GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
