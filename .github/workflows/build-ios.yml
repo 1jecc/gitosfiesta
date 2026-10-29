@@ -27,6 +27,12 @@ jobs:
       with:
         xcode-version: '26.5.0'
 
+    - name: Omitir recursos de iconos faltantes
+      run: |
+        # Remueve las referencias a MauiIcon del csproj para evitar el error de actool
+        sed -i '' '/MauiIcon/d' gitosfiesta/gitosfiesta.csproj
+        sed -i '' '/MauiSplashScreen/d' gitosfiesta/gitosfiesta.csproj
+
     - name: Compilar proyecto iOS
       run: |
-        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:UseSimulator=true /p:EnableCodeSigning=false /p:CheckForUnsupportedXcode=false /p:EnableMauiAssetProcessing=false
+        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:UseSimulator=true /p:EnableCodeSigning=false /p:CheckForUnsupportedXcode=false
