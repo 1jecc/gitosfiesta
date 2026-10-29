@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using GitosFiesta.Web;
-using GitosFiesta.Web.Components;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
@@ -9,4 +7,20 @@ builder.RootComponents.Add<HeadOutlet>("head::after");
 
 builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-await builder.Build().RunAsync();
+// --- CONFIGURACIÓN GLOBAL DE SUPABASE ---
+var supabaseUrl = "https://qokxfhxkbdoqgvlnzruh.supabase.co"; //
+
+var supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFva3hmaHhrYmRvcWd2bG56cnVoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEyNDY4MjEsImV4cCI6MjEwNjgyMjgyMX0.HiRxtNy_Q4MlVZP59Yj8vhX4oPzHs3R58TSd4P1Qbpg";        
+
+var options = new Supabase.SupabaseOptions
+{
+    AutoConnectRealtime = true
+};
+
+var supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, options);
+
+// Lo registramos como un servicio singleton global para que cualquier página lo use
+builder.Services.AddSingleton(supabaseClient);
+// ----------------------------------------
+
+await builder.Build().AddScopedSupabaseSession(); // o builder.Build().RunAsync();
