@@ -22,6 +22,11 @@ jobs:
         dotnet workload restore
         dotnet workload install maui
 
+    - name: Seleccionar Xcode compatible
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: '16.2'
+
     - name: Compilar proyecto iOS
       run: |
         dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:CheckForUnsupportedXcode=false
