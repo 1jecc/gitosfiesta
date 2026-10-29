@@ -24,4 +24,4 @@ jobs:
 
     - name: Compilar proyecto iOS
       run: |
-        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:SkipXcodeVersionCheck=true
+        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:CheckForUnsupportedXcode=false
