@@ -35,11 +35,8 @@
     {
         try
         {
-            // Forzamos explícitamente el nombre de la tabla de Supabase para evitar errores de ruta en WebAssembly
-            var response = await SupabaseClient
-                .From<Usuario>()
-                .Table("gitosfiesta_usuarios")
-                .Get();
+            // Usamos .From<Usuario>() directamente; el modelo ya apunta a "gitosfiesta_usuarios"
+            var response = await SupabaseClient.From<Usuario>().Get();
 
             var userFound = response.Models.FirstOrDefault(x => 
                 x.NombreUsuario == loginModel.Usuario && 
