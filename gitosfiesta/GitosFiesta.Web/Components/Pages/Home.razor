@@ -35,10 +35,12 @@
     {
         try
         {
-            // Tu misma consulta exacta a Supabase
+            // Consulta optimizada con filtros encadenados para evitar fallos de formato en WebAssembly
             var response = await SupabaseClient
                 .From<Usuario>()
-                .Where(x => x.NombreUsuario == loginModel.Usuario && x.Password == loginModel.Password && x.Enable == true)
+                .Where(x => x.NombreUsuario == loginModel.Usuario)
+                .Where(x => x.Password == loginModel.Password)
+                .Where(x => x.Enable)
                 .Get();
 
             var userFound = response.Models.FirstOrDefault();
