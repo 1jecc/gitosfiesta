@@ -44,6 +44,7 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.9" />
+		<PackageReference Include="QuestPDF" Version="2026.9.1" />
 		<PackageReference Include="Supabase" Version="8.3.0" />
 	</ItemGroup>
 

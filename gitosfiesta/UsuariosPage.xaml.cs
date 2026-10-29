@@ -1,4 +1,5 @@
 using gitosfiesta.Models;
+using System.Text.RegularExpressions;
 
 namespace gitosfiesta;
 
@@ -38,6 +39,23 @@ public partial class UsuariosPage : ContentPage
 
     private void OnNombreOApellidoChanged(object sender, TextChangedEventArgs e)
     {
+        if (sender is Entry entry)
+        {
+            string textoActual = e.NewTextValue ?? "";
+
+            // 1. Reemplazar cualquier carácter que no sea letra o espacio
+            string textoFiltrado = Regex.Replace(textoActual, @"[^a-zA-ZÁÉÍÓÚáéíóúÑñÜü\s]", "");
+
+            // 2. Reemplazar dos o más espacios seguidos por un solo espacio
+            textoFiltrado = Regex.Replace(textoFiltrado, @"\s+", " ");
+
+            if (textoFiltrado != textoActual)
+            {
+                entry.Text = textoFiltrado;
+                return; // Evita bucles infinitos al reasignar el texto al Entry
+            }
+        }
+
         string nombre = TxtNuevoNombre.Text?.Trim() ?? "";
         string apellido = TxtNuevoApellido.Text?.Trim() ?? "";
 

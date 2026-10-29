@@ -37,34 +37,7 @@
                 LineHeight="1.2" />
 
             <!-- Tarjeta o botón de acción rápida -->
-            <Frame BackgroundColor="White"
-                   CornerRadius="20"
-                   HasShadow="True"
-                   Padding="20"
-                   BorderColor="#B2F0EC"
-                   HorizontalOptions="Fill">
-                <VerticalStackLayout Spacing="12">
-                    <Label Text="Panel Principal"
-                           FontSize="18"
-                           FontAttributes="Bold"
-                           TextColor="#1A3C40" />
-                    <Label Text="Tu sesión está activa y lista para operar las herramientas del sistema."
-                           FontSize="14"
-                           TextColor="#666666" />
 
-                    <Button
-                        x:Name="CounterBtn"
-                        Text="¡Acción Rápida!" 
-                        BackgroundColor="#00D2C4"
-                        TextColor="White"
-                        FontAttributes="Bold"
-                        CornerRadius="14"
-                        HeightRequest="48"
-                        Clicked="OnCounterClicked"
-                        HorizontalOptions="Fill" 
-                        Margin="0,5,0,0" />
-                </VerticalStackLayout>
-            </Frame>
 
         </VerticalStackLayout>
     </ScrollView>

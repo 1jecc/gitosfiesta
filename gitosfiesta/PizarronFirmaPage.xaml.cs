@@ -44,11 +44,17 @@ public partial class PizarronFirmaPage : ContentPage, IDrawable
 
     public void Draw(ICanvas canvas, RectF dirtyRect)
     {
+        // 1. Rellenar todo el fondo de blanco para evitar canales transparentes que se vuelvan negros
+        canvas.FillColor = Colors.White;
+        canvas.FillRectangle(dirtyRect);
+
+        // 2. Configurar los estilos de dibujo para la firma
         canvas.StrokeColor = Colors.Black;
         canvas.StrokeSize = 3;
         canvas.StrokeLineCap = LineCap.Round;
         canvas.StrokeLineJoin = LineJoin.Round;
 
+        // 3. Dibujar cada uno de los trazos registrados
         foreach (var trazo in _trazos)
         {
             for (int i = 0; i < trazo.Count - 1; i++)
@@ -57,7 +63,6 @@ public partial class PizarronFirmaPage : ContentPage, IDrawable
             }
         }
     }
-
     private void OnBorrarClicked(object sender, EventArgs e)
     {
         _trazos.Clear();

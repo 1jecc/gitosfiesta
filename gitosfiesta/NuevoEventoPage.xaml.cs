@@ -24,7 +24,17 @@ public partial class NuevoEventoPage : ContentPage
         InitializeComponent();
         _supabaseClient = supabaseClient;
         _eventoId = eventoId;
-        DatePickerFecha.MinimumDate = DateTime.Today;
+
+        // RESTRICCIÓN: Solo se pueden registrar eventos a partir de 15 días a partir de hoy (si es nuevo)
+        if (!_eventoId.HasValue)
+        {
+            DatePickerFecha.MinimumDate = DateTime.Today.AddDays(15);
+            DatePickerFecha.Date = DateTime.Today.AddDays(15);
+        }
+        else
+        {
+            DatePickerFecha.MinimumDate = DateTime.Today; // Si se edita, respetamos el histórico si fuera necesario
+        }
 
         TxtNombreCliente.TextChanged += OnNombreClienteTextChanged;
         TxtTelefono.TextChanged += OnTelefonoTextChanged;
@@ -53,7 +63,6 @@ public partial class NuevoEventoPage : ContentPage
         else
         {
             LimpiarFormularioCompleto();
-            // Validación completamente silenciosa al abrir por primera vez (sin alertas)
             await ValidarFechaSilenciosaAsync(DatePickerFecha.Date);
         }
     }
@@ -123,15 +132,7 @@ public partial class NuevoEventoPage : ContentPage
 
             PickerHorario.ItemsSource = horariosDisponibles;
             PickerHorario.SelectedIndex = -1;
-
-            if (horariosDisponibles.Count == 0)
-            {
-                PickerHorario.IsEnabled = false;
-            }
-            else
-            {
-                PickerHorario.IsEnabled = true;
-            }
+            PickerHorario.IsEnabled = horariosDisponibles.Count > 0;
         }
 
         EvaluarElegibilidadPromocion();
@@ -168,7 +169,6 @@ public partial class NuevoEventoPage : ContentPage
             {
                 TimePickerEntreSemana.IsEnabled = false;
                 _horaEntreSemanaSeleccionada = false;
-                // Esta alerta solo se ejecuta cuando el usuario interactúa cambiando de fecha explícitamente
                 await DisplayAlert("Día Ocupado", "Este día entre semana ya cuenta con un evento registrado. Selecciona otra fecha.", "Aceptar");
             }
             else
@@ -208,7 +208,6 @@ public partial class NuevoEventoPage : ContentPage
             if (horariosDisponibles.Count == 0)
             {
                 PickerHorario.IsEnabled = false;
-                // Esta alerta solo se ejecuta cuando el usuario selecciona un fin de semana lleno
                 await DisplayAlert("Día Ocupado", "Los dos horarios de este fin de semana ya se encuentran ocupados.", "Aceptar");
             }
             else
@@ -224,7 +223,6 @@ public partial class NuevoEventoPage : ContentPage
     {
         if (_eventoId.HasValue) return;
 
-        // Desvinculamos temporalmente el evento para evitar disparos accidentales
         DatePickerFecha.DateSelected -= OnFechaSelected;
 
         TxtNombreCliente.Text = string.Empty;
@@ -236,9 +234,8 @@ public partial class NuevoEventoPage : ContentPage
         _descuentoPromocion = 0;
         _extrasSeleccionados.Clear();
 
-        DatePickerFecha.Date = DateTime.Today;
+        DatePickerFecha.Date = DateTime.Today.AddDays(15);
 
-        // Desmarcamos todos los checkboxes estáticos
         if (ChkShowAnimador != null) ChkShowAnimador.IsChecked = false;
         if (ChkDecoracionDeluxe != null) ChkDecoracionDeluxe.IsChecked = false;
         if (ChkBotargaExtra != null) ChkBotargaExtra.IsChecked = false;
@@ -264,7 +261,6 @@ public partial class NuevoEventoPage : ContentPage
 
         BloquearPasosDesdePaquete();
 
-        // Volvemos a vincular el evento del DatePicker
         DatePickerFecha.DateSelected += OnFechaSelected;
     }
 
@@ -273,7 +269,6 @@ public partial class NuevoEventoPage : ContentPage
         try
         {
             if (_supabaseClient == null) return;
-
             if (_catalogoMisc != null && _catalogoMisc.Count > 0) return;
 
             var response = await _supabaseClient
@@ -293,7 +288,6 @@ public partial class NuevoEventoPage : ContentPage
     {
         _extrasSeleccionados = new List<string>(extrasPreSeleccionados ?? new List<string>());
 
-        // Sincronizamos el estado visual de los checkboxes estáticos
         if (ChkShowAnimador != null) ChkShowAnimador.IsChecked = _extrasSeleccionados.Contains("Show (1 animador y 1 botarga)");
         if (ChkDecoracionDeluxe != null) ChkDecoracionDeluxe.IsChecked = _extrasSeleccionados.Contains("Decoración Deluxe");
         if (ChkBotargaExtra != null) ChkBotargaExtra.IsChecked = _extrasSeleccionados.Contains("Botarga extra");
@@ -435,11 +429,35 @@ public partial class NuevoEventoPage : ContentPage
     {
         if (!_esFinDeSemana)
         {
+            TimeSpan horaSeleccionada = e.NewTime;
+
+            // RESTRICCIÓN: Prohibido entre las 22:00 (10:00 PM) y las 08:00 (8:00 AM)
+            if (horaSeleccionada >= TimeSpan.FromHours(22) || horaSeleccionada < TimeSpan.FromHours(8))
+            {
+                // Usamos MainThread para evitar bloqueos de UI al mostrar la alerta y resetear
+                MainThread.BeginInvokeOnMainThread(async () =>
+                {
+                    await DisplayAlert("Horario no permitido", "No se pueden registrar eventos entre las 10:00 PM y las 8:00 AM.", "Aceptar");
+
+                    // Desvinculamos temporalmente para evitar bucle
+                    TimePickerEntreSemana.PropertyChanged -= TimePicker_PropertyChanged;
+                    TimePickerEntreSemana.Time = new TimeSpan(12, 0, 0); // Resetea a las 12:00 PM
+                    TimePickerEntreSemana.PropertyChanged += TimePicker_PropertyChanged;
+                });
+
+                _horaEntreSemanaSeleccionada = false;
+                return;
+            }
+
             _horaEntreSemanaSeleccionada = true;
             HabilitarPaquetes();
         }
     }
 
+    private void TimePicker_PropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // Control auxiliar para prevenir ciclos de actualización en MAUI
+    }
     private void HabilitarPaquetes()
     {
         var paquetes = _catalogoMisc
@@ -590,9 +608,20 @@ public partial class NuevoEventoPage : ContentPage
 
     private void OnNombreClienteTextChanged(object sender, TextChangedEventArgs e)
     {
-        if (string.IsNullOrWhiteSpace(e.NewTextValue)) return;
-        string textoFiltrado = new string(e.NewTextValue.Where(c => char.IsLetter(c) || c == ' ').ToArray());
-        if (e.NewTextValue != textoFiltrado) TxtNombreCliente.Text = textoFiltrado;
+        if (sender is Entry entry)
+        {
+            string textoActual = e.NewTextValue ?? "";
+
+            // Permitir solo letras y espacios, evitando múltiples espacios seguidos
+            string textoFiltrado = Regex.Replace(textoActual, @"[^a-zA-ZÁÉÍÓÚáéíóúÑñÜü\s]", "");
+            textoFiltrado = Regex.Replace(textoFiltrado, @"\s+", " ");
+
+            if (textoFiltrado != textoActual)
+            {
+                entry.Text = textoFiltrado;
+                return;
+            }
+        }
     }
 
     private void OnTelefonoTextChanged(object sender, TextChangedEventArgs e)
@@ -654,6 +683,13 @@ public partial class NuevoEventoPage : ContentPage
 
     private async void OnGuardarEventoClicked(object sender, EventArgs e)
     {
+        // Validación de plazo de 15 días para nuevos eventos
+        if (!_eventoId.HasValue && DatePickerFecha.Date < DateTime.Today.AddDays(15))
+        {
+            await DisplayAlert("Plazo inválido", "Los eventos deben registrarse con un mínimo de 15 días de anticipación a partir de hoy.", "Aceptar");
+            return;
+        }
+
         bool horarioValido = _esFinDeSemana ? (PickerHorario.SelectedIndex != -1) : _horaEntreSemanaSeleccionada;
 
         if (string.IsNullOrWhiteSpace(TxtNombreCliente.Text) ||
@@ -680,6 +716,8 @@ public partial class NuevoEventoPage : ContentPage
             decimal.TryParse(TxtAnticipo.Text, out decimal anticipo);
             int.TryParse(TxtNumeroPersonas.Text, out int numPersonas);
 
+            decimal saldo = precio - anticipo;
+
             TimeSpan horaFinalEvento;
             if (_esFinDeSemana && PickerHorario.SelectedItem != null)
             {
@@ -689,6 +727,13 @@ public partial class NuevoEventoPage : ContentPage
             else
             {
                 horaFinalEvento = TimePickerEntreSemana.Time;
+
+                // Validación extra al guardar por si acaso
+                if (horaFinalEvento >= TimeSpan.FromHours(22) || horaFinalEvento < TimeSpan.FromHours(8))
+                {
+                    await DisplayAlert("Horario no permitido", "No se pueden registrar eventos entre las 10:00 PM y las 8:00 AM.", "Aceptar");
+                    return;
+                }
             }
 
             string paqueteSeleccionado = PickerPaquete.SelectedItem?.ToString() ?? "";
@@ -713,7 +758,7 @@ public partial class NuevoEventoPage : ContentPage
                 var eventoActualizado = new EventoModel
                 {
                     Id = _eventoId.Value,
-                    nombre_cliente = TTxtNombreClienteTrim(TxtNombreCliente.Text),
+                    nombre_cliente = TxtNombreCliente.Text.Trim(),
                     telefono_cliente = telefonoLimpio,
                     tipo_evento = TxtTipoEvento.Text.Trim(),
                     fecha_evento = DatePickerFecha.Date,
@@ -723,6 +768,7 @@ public partial class NuevoEventoPage : ContentPage
                     menu = menuFormateado,
                     precio = precio,
                     anticipo = anticipo,
+                    Saldo = saldo,
                     promocion = string.IsNullOrWhiteSpace(promocionFinal) ? null : promocionFinal,
                     observaciones = TxtObservaciones.Text?.Trim()
                 };
@@ -750,6 +796,7 @@ public partial class NuevoEventoPage : ContentPage
                     menu = menuFormateado,
                     precio = precio,
                     anticipo = anticipo,
+                    Saldo = saldo,
                     promocion = string.IsNullOrWhiteSpace(promocionFinal) ? null : promocionFinal,
                     observaciones = TxtObservaciones.Text?.Trim(),
                     estatus = "Abierto y por pagar",
@@ -780,6 +827,4 @@ public partial class NuevoEventoPage : ContentPage
             await DisplayAlert("Error al guardar", $"No se pudo procesar el evento: {ex.Message}", "Aceptar");
         }
     }
-
-    private string TTxtNombreClienteTrim(string texto) => texto?.Trim() ?? string.Empty;
 }
