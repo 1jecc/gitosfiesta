@@ -35,11 +35,11 @@
     {
         try
         {
-            // Usamos .Eq() que construye correctamente los parámetros de la URL sin corromperla
+            // Usamos .Filter con los operadores oficiales de Supabase 1.0.0
             var response = await SupabaseClient
                 .From<Usuario>()
-                .Eq("nombre_usuario", loginModel.Usuario)
-                .Eq("password", loginModel.Password)
+                .Filter("nombre_usuario", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Usuario)
+                .Filter("password", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Password)
                 .Get();
 
             // Validamos el estado 'enable' de forma segura en memoria
