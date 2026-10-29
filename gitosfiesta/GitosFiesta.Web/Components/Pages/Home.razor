@@ -35,14 +35,14 @@
     {
         try
         {
-            // Usamos Filter para texto y evaluamos el booleano en memoria o con un operador de texto seguro
+            // Usamos .Eq() que construye correctamente los parámetros de la URL sin corromperla
             var response = await SupabaseClient
                 .From<Usuario>()
-                .Filter("nombre_usuario", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Usuario)
-                .Filter("password", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Password)
+                .Eq("nombre_usuario", loginModel.Usuario)
+                .Eq("password", loginModel.Password)
                 .Get();
 
-            // Verificamos el usuario encontrado y su estado 'enable' de forma segura en C#
+            // Validamos el estado 'enable' de forma segura en memoria
             var userFound = response.Models.FirstOrDefault(x => x.Enable);
 
             if (userFound != null)
