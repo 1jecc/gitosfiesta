@@ -35,15 +35,14 @@
     {
         try
         {
-            // Usamos .Filter con los operadores oficiales de Supabase 1.0.0
-            var response = await SupabaseClient
-                .From<Usuario>()
-                .Filter("nombre_usuario", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Usuario)
-                .Filter("password", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Password)
-                .Get();
+            // Consultamos la tabla completa y validamos de forma segura en memoria (C# LINQ)
+            // Esto evita por completo cualquier fallo de codificación de URL en WebAssembly
+            var response = await SupabaseClient.From<Usuario>().Get();
 
-            // Validamos el estado 'enable' de forma segura en memoria
-            var userFound = response.Models.FirstOrDefault(x => x.Enable);
+            var userFound = response.Models.FirstOrDefault(x => 
+                x.NombreUsuario == loginModel.Usuario && 
+                x.Password == loginModel.Password && 
+                x.Enable);
 
             if (userFound != null)
             {
