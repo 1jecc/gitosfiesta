@@ -35,12 +35,12 @@
     {
         try
         {
-            // Consulta optimizada con filtros encadenados para evitar fallos de formato en WebAssembly
+            // Consulta robusta usando los nombres reales de las columnas en Supabase
             var response = await SupabaseClient
                 .From<Usuario>()
-                .Where(x => x.NombreUsuario == loginModel.Usuario)
-                .Where(x => x.Password == loginModel.Password)
-                .Where(x => x.Enable)
+                .Filter("nombre_usuario", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Usuario)
+                .Filter("password", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Password)
+                .Filter("enable", Supabase.Postgrest.Constants.Operator.Equals, true)
                 .Get();
 
             var userFound = response.Models.FirstOrDefault();
