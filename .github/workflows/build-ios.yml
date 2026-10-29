@@ -29,4 +29,4 @@ jobs:
 
     - name: Compilar proyecto iOS
       run: |
-        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:UseSimulator=true /p:EnableCodeSigning=false /p:CheckForUnsupportedXcode=false
+        dotnet build gitosfiesta/gitosfiesta.csproj -f net9.0-ios -c Release /p:UseSimulator=true /p:EnableCodeSigning=false /p:CheckForUnsupportedXcode=false /p:EnableMauiAssetProcessing=false
