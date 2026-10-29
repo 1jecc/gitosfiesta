@@ -35,15 +35,15 @@
     {
         try
         {
-            // Consulta robusta usando los nombres reales de las columnas en Supabase
+            // Usamos Filter para texto y evaluamos el booleano en memoria o con un operador de texto seguro
             var response = await SupabaseClient
                 .From<Usuario>()
                 .Filter("nombre_usuario", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Usuario)
                 .Filter("password", Supabase.Postgrest.Constants.Operator.Equals, loginModel.Password)
-                .Filter("enable", Supabase.Postgrest.Constants.Operator.Equals, true)
                 .Get();
 
-            var userFound = response.Models.FirstOrDefault();
+            // Verificamos el usuario encontrado y su estado 'enable' de forma segura en C#
+            var userFound = response.Models.FirstOrDefault(x => x.Enable);
 
             if (userFound != null)
             {
