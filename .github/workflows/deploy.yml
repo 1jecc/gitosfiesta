@@ -1,0 +1,33 @@
+name: Desplegar Blazor Web a GitHub Pages
+
+on:
+  push:
+    branches: [ main ] # O cámbialo a 'master' si esa es tu rama principal
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # Permisos necesarios para que GitHub Pages pueda escribir el despliegue
+    permissions:
+      contents: write
+
+    steps:
+      - name: Descargar el código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x' # Ajusta la versión de .NET que estés usando (ej. 8.0.x o 9.0.x)
+
+      - name: Compilar y publicar la app Blazor Web
+        run: |
+          dotnet publish GitosFiesta.Web/GitosFiesta.Web.csproj -c Release -o release/wwwroot
+          # Crea un archivo .nojekyll para evitar que GitHub ignore archivos que empiezan con guion bajo (_framework)
+          touch release/wwwroot/.nojekyll
+
+      - name: Desplegar en GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: release/wwwroot
