@@ -1,45 +1,27 @@
 @page "/"
+@inject Supabase.Client SupabaseClient
 @inject NavigationManager Navigation
 
-<PageTitle>Iniciar Sesión - GitosFiesta</PageTitle>
-
 <div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="card shadow-lg border-0 p-4" style="max-width: 420px; width: 100%; border-radius: 24px; background-color: #ffffff;">
+    <div class="card shadow-lg p-4" style="max-width: 420px; width: 100%; border-radius: 24px;">
+        <h3 class="text-center mb-3" style="color: #3F3B78;">🎉 GitosFiesta</h3>
         
-        <div class="text-center mb-4">
-            <!-- Aquí puedes usar tu logo -->
-            <h2 class="fw-bold" style="color: #3F3B78;">🎉 GitosFiesta</h2>
-            <p class="text-muted" style="font-size: 15px;">Inicia sesión para continuar</p>
-        </div>
-
         @if (!string.IsNullOrEmpty(errorMessage))
         {
-            <div class="alert alert-danger text-center" role="alert">
-                @errorMessage
-            </div>
+            <div class="alert alert-danger">@errorMessage</div>
         }
 
-        <EditForm Model="@loginModel" OnValidSubmit="@IniciarSesionSupabase">
+        <EditForm Model="@loginModel" OnValidSubmit="@IniciarSesion">
             <div class="mb-3">
-                <label class="form-label fw-bold text-dark" style="font-size: 13px;">Usuario o Correo</label>
-                <InputText class="form-control bg-light border-0 py-2" @bind-Value="loginModel.Usuario" placeholder="Escribe tu usuario" required style="border-radius: 12px;" />
+                <label class="fw-bold">Usuario o Correo</label>
+                <InputText class="form-control" @bind-Value="loginModel.Usuario" required />
             </div>
-
             <div class="mb-3">
-                <label class="form-label fw-bold text-dark" style="font-size: 13px;">Contraseña</label>
-                <InputText type="password" class="form-control bg-light border-0 py-2" @bind-Value="loginModel.Password" placeholder="Escribe tu contraseña" required style="border-radius: 12px;" />
+                <label class="fw-bold">Contraseña</label>
+                <InputText type="password" class="form-control" @bind-Value="loginModel.Password" required />
             </div>
-
-            <button type="submit" class="btn w-100 py-3 fw-bold text-white mt-3" style="background-color: #00D2C4; border-radius: 12px;" disabled="@isLoading">
-                @if (isLoading)
-                {
-                    <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    <span>Validando...</span>
-                }
-                else
-                {
-                    <span>Iniciar Sesión</span>
-                }
+            <button type="submit" class="btn w-100 text-white fw-bold py-2" style="background-color: #00D2C4; border-radius: 12px;">
+                Iniciar Sesión
             </button>
         </EditForm>
     </div>
@@ -48,57 +30,37 @@
 @code {
     private LoginModel loginModel = new LoginModel();
     private string errorMessage = string.Empty;
-    private bool isLoading = false;
 
-    // Instancia de Supabase (puedes inyectarla o inicializarla igual que en tu app)
-    // private readonly Supabase.Client _supabaseClient = App.SupabaseClient;
-
-    private async Task IniciarSesionSupabase()
+    private async Task IniciarSesion()
     {
-        errorMessage = string.Empty;
-        isLoading = true;
-
         try
         {
-            string usuario = loginModel.Usuario?.Trim() ?? string.Empty;
-            string password = loginModel.Password?.Trim() ?? string.Empty;
-
-            // --- AQUÍ CONECTAS TU MISMA CONSULTA A SUPABASE ---
-            /*
-            var response = await _supabaseClient
+            // Tu misma consulta exacta a Supabase
+            var response = await SupabaseClient
                 .From<Usuario>()
-                .Where(x => x.NombreUsuario == usuario && x.Password == password && x.Enable == true)
+                .Where(x => x.NombreUsuario == loginModel.Usuario && x.Password == loginModel.Password && x.Enable == true)
                 .Get();
 
             var userFound = response.Models.FirstOrDefault();
 
             if (userFound != null)
             {
-                // Guardamos sesión igual que en tu código MAUI
+                // Guardamos la sesión globalmente igual que en MAUI
                 SessionContext.UsuarioId = (int)userFound.Id;
                 SessionContext.NombreCompleto = $"{userFound.Nombre} {userFound.ApellidoPaterno}";
                 SessionContext.Rol = userFound.AccessType;
 
-                // Redirigimos al menú o módulo principal en la web
+                // Redirigimos al panel o módulo principal
                 Navigation.NavigateTo("/nuevo-evento");
             }
             else
             {
                 errorMessage = "Usuario o contraseña incorrectos.";
             }
-            */
-
-            // Simulación temporal para probar el diseño web idéntico al de tu MAUI:
-            await Task.Delay(800);
-            Navigation.NavigateTo("/nuevo-evento");
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error de conexión con el servidor: {ex.Message}";
-        }
-        finally
-        {
-            isLoading = false;
+            errorMessage = $"Error de conexión: {ex.Message}";
         }
     }
 
