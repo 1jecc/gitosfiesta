@@ -13,7 +13,7 @@ public class AbonoModel : BaseModel
     public long EventoId { get; set; }
 
     [Column("monto")]
-    public decimal Monto { get; set; }
+    public double Monto { get; set; } // <-- Usar double evita el conflicto con Int32 de Supabase
 
     [Column("fecha_pago")]
     public DateTime FechaPago { get; set; }

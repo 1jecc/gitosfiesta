@@ -2,42 +2,181 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="gitosfiesta.MainPage"
-             BackgroundColor="#E9F7F8">
+             BackgroundColor="#FFFFFF"
+             Shell.NavBarIsVisible="False"
+             Title="Inicio">
 
     <ScrollView>
-        <VerticalStackLayout
-            Padding="30,40,30,30"
-            Spacing="25"
-            HorizontalOptions="Center"
-            MaximumWidthRequest="500">
+        <VerticalStackLayout Spacing="24" Padding="32">
 
-            <!-- Logotipo de Gitos Fiesta -->
-            <Image
-                Source="logo_login.jpeg"
-                HeightRequest="200"
-                Aspect="AspectFit"
-                HorizontalOptions="Center" />
+            <!-- ENCABEZADO DE BIENVENIDA -->
+            <Grid ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                <VerticalStackLayout Spacing="2">
+                    <Label x:Name="LblBienvenida" Text="¡Bienvenido!" FontSize="26" FontAttributes="Bold" TextColor="#394957"/>
+                    <Label Text="Gitos Fiesta - Panel general de control y seguimiento de eventos" FontSize="13" TextColor="#8FA7B8"/>
+                </VerticalStackLayout>
 
-            <!-- Título Principal -->
-            <Label
-                Text="¡Bienvenido a Gitos Fiesta!"
-                FontSize="26"
-                FontAttributes="Bold"
-                TextColor="#1A3C40"
-                HorizontalOptions="Center"
-                HorizontalTextAlignment="Center" />
+                <!-- Sección derecha con Fecha actual y Botón de perfil -->
+                <HorizontalStackLayout Grid.Column="1" Spacing="12" VerticalOptions="Center">
+                    <Frame BackgroundColor="#F8FAFC" CornerRadius="12" Padding="12,8" HasShadow="False" BorderColor="#E2E8F0" VerticalOptions="Center">
+                        <HorizontalStackLayout Spacing="6">
+                            <Label Text="📅" FontSize="14" VerticalOptions="Center"/>
+                            <Label x:Name="LblFechaActual" Text="03 de noviembre de 2026" FontSize="12" FontAttributes="Bold" TextColor="#394957" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </Frame>
+                    <Frame BackgroundColor="#F3F5F6" CornerRadius="22" WidthRequest="44" HeightRequest="44" Padding="0" HasShadow="False" BorderColor="#E2E8F0" VerticalOptions="Center">
+                        <Label Text="👤" FontSize="18" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Frame>
+                </HorizontalStackLayout>
+            </Grid>
 
-            <!-- Descripción de bienvenida -->
-            <Label
-                Text="Sistema de gestión y control de eventos. Utiliza el menú lateral para navegar entre las diferentes secciones."
-                FontSize="15"
-                TextColor="#7A8B8E"
-                HorizontalOptions="Center"
-                HorizontalTextAlignment="Center"
-                LineHeight="1.2" />
+            <!-- 1. FILA SUPERIOR DE MÉTRICAS -->
+            <Grid ColumnDefinitions="*, *, *, *" ColumnSpacing="16">
 
-            <!-- Tarjeta o botón de acción rápida -->
+                <!-- 1. Eventos del mes (Azul clarito: #DCE8F0) -->
+                <Frame Grid.Column="0" BackgroundColor="#DCE8F0" CornerRadius="16" HasShadow="False" Padding="16" BorderColor="Transparent">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="12" VerticalOptions="Center">
+                        <Frame BackgroundColor="#FFFFFF" CornerRadius="12" WidthRequest="40" HeightRequest="40" Padding="0" HasShadow="False" BorderColor="Transparent">
+                            <Label Text="📅" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Frame>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label x:Name="LblTotalMes" Text="04" FontSize="22" FontAttributes="Bold" TextColor="#394957"/>
+                            <Label Text="Eventos del mes" FontSize="11" TextColor="#5A6E7F" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
 
+                <!-- 2. Finalizados (Amarillo neutro / clarito: #F5F2DF) -->
+                <Frame Grid.Column="1" BackgroundColor="#F5F2DF" CornerRadius="16" HasShadow="False" Padding="16" BorderColor="Transparent">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="12" VerticalOptions="Center">
+                        <Frame BackgroundColor="#FFFFFF" CornerRadius="12" WidthRequest="40" HeightRequest="40" Padding="0" HasShadow="False" BorderColor="Transparent">
+                            <Label Text="✔️" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Frame>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label x:Name="LblFinalizados" Text="01" FontSize="22" FontAttributes="Bold" TextColor="#394957"/>
+                            <Label Text="Finalizados" FontSize="11" TextColor="#7A755E" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
+
+                <!-- 3. Liquidados (Rosa clarito / neutro: #F0DCE2) - Emoji de Dinero añadido 💰 -->
+                <Frame Grid.Column="2" BackgroundColor="#F0DCE2" CornerRadius="16" HasShadow="False" Padding="16" BorderColor="Transparent">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="12" VerticalOptions="Center">
+                        <Frame BackgroundColor="#FFFFFF" CornerRadius="12" WidthRequest="40" HeightRequest="40" Padding="0" HasShadow="False" BorderColor="Transparent">
+                            <Label Text="💰" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Frame>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label x:Name="LblLiquidados" Text="01" FontSize="22" FontAttributes="Bold" TextColor="#4E705D"/>
+                            <Label Text="Liquidados" FontSize="11" TextColor="#7F5A63" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
+
+                <!-- 4. Pendientes (Gris neutro de apoyo: #EAE4DC) -->
+                <Frame Grid.Column="3" BackgroundColor="#EAE4DC" CornerRadius="16" HasShadow="False" Padding="16" BorderColor="Transparent">
+                    <Grid ColumnDefinitions="Auto, *" ColumnSpacing="12" VerticalOptions="Center">
+                        <Frame BackgroundColor="#FFFFFF" CornerRadius="12" WidthRequest="40" HeightRequest="40" Padding="0" HasShadow="False" BorderColor="Transparent">
+                            <Label Text="⏰" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Frame>
+                        <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                            <Label x:Name="LblPendientes" Text="02" FontSize="22" FontAttributes="Bold" TextColor="#9E4E4E"/>
+                            <Label Text="Pendientes" FontSize="11" TextColor="#6E6760" FontAttributes="Bold"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </Frame>
+
+            </Grid>
+
+            <!-- 2. SECCIÓN INFERIOR: CONTENIDO PRINCIPAL EN 2 COLUMNAS -->
+            <Grid x:Name="GridDashboard" ColumnDefinitions="*, *" ColumnSpacing="24">
+
+                <!-- Columna Izquierda: Alertas de Pagos -->
+                <VerticalStackLayout Grid.Column="0" Spacing="16">
+                    <Frame BackgroundColor="#FFFFFF" CornerRadius="16" HasShadow="False" Padding="20" BorderColor="#E2E8F0">
+                        <VerticalStackLayout Spacing="14">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="🔔" FontSize="15" VerticalOptions="Center"/>
+                                    <Label Text="Alertas de pagos próximos" FontSize="15" FontAttributes="Bold" TextColor="#394957" VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                                <Label Grid.Column="1" Text="Ver todos →" FontSize="12" TextColor="#8FA7B8" FontAttributes="Bold" VerticalOptions="Center"/>
+                            </Grid>
+                            <BoxView HeightRequest="1" BackgroundColor="#F3F5F6"/>
+
+                            <CollectionView x:Name="ColeccionAlertas" HeightRequest="260" SelectionMode="Single" SelectionChanged="OnAlertaSelected">
+                                <CollectionView.EmptyView>
+                                    <Label Text="No hay alertas pendientes de pago en este momento." FontSize="12" TextColor="#8FA7B8" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </CollectionView.EmptyView>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <!-- Marco con esquinas redondeadas y fondo rojo/rosa suave (#F0DCE2) -->
+                                        <Frame BackgroundColor="#F0DCE2" CornerRadius="12" Padding="14,12" Margin="0,0,0,8" HasShadow="False" BorderColor="#E4CBD3">
+                                            <VerticalStackLayout Spacing="6">
+                                                <Grid ColumnDefinitions="*, Auto">
+                                                    <Label Text="{Binding Cliente}" FontAttributes="Bold" TextColor="#394957" FontSize="13"/>
+
+                                                    <!-- Píldora de estado Pendiente -->
+                                                    <Frame Grid.Column="1" BackgroundColor="#FFFFFF" CornerRadius="10" Padding="10,4" HasShadow="False" BorderColor="Transparent">
+                                                        <Label Text="Pendiente" TextColor="#9E4E4E" FontSize="11" FontAttributes="Bold"/>
+                                                    </Frame>
+                                                </Grid>
+
+                                                <HorizontalStackLayout Spacing="8">
+                                                    <Label Text="⏳" FontSize="11" VerticalOptions="Center"/>
+                                                    <Label Text="{Binding MensajeAlerta}" TextColor="#9E4E4E" FontSize="11" VerticalOptions="Center"/>
+                                                </HorizontalStackLayout>
+                                            </VerticalStackLayout>
+                                        </Frame>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+
+                <!-- Columna Derecha: Próximos Eventos -->
+                <VerticalStackLayout Grid.Column="1" Spacing="16">
+                    <Frame BackgroundColor="#FFFFFF" CornerRadius="16" HasShadow="False" Padding="20" BorderColor="#E2E8F0">
+                        <VerticalStackLayout Spacing="14">
+                            <Grid ColumnDefinitions="*, Auto">
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="📅" FontSize="15" VerticalOptions="Center"/>
+                                    <Label Text="Próximos Eventos" FontSize="15" FontAttributes="Bold" TextColor="#394957" VerticalOptions="Center"/>
+                                </HorizontalStackLayout>
+                                <Label Grid.Column="1" Text="Ver todos →" FontSize="12" TextColor="#8FA7B8" FontAttributes="Bold" VerticalOptions="Center"/>
+                            </Grid>
+                            <BoxView HeightRequest="1" BackgroundColor="#F3F5F6"/>
+
+                            <CollectionView x:Name="ColeccionProximos" HeightRequest="260" SelectionMode="Single" SelectionChanged="OnProximoEventoSelected">
+                                <CollectionView.EmptyView>
+                                    <Label Text="No hay próximos eventos registrados." FontSize="12" TextColor="#8FA7B8" HorizontalOptions="Center" VerticalOptions="Center"/>
+                                </CollectionView.EmptyView>
+                                <CollectionView.ItemTemplate>
+                                    <DataTemplate>
+                                        <VerticalStackLayout Padding="4,8" Spacing="6">
+                                            <Grid ColumnDefinitions="*, Auto">
+                                                <Label Text="{Binding nombre_cliente}" FontAttributes="Bold" TextColor="#394957" FontSize="13"/>
+                                                <Frame Grid.Column="1" BackgroundColor="#DCE8F0" CornerRadius="10" Padding="10,4" HasShadow="False" BorderColor="Transparent">
+                                                    <Label Text="{Binding estatus}" TextColor="#394957" FontSize="11" FontAttributes="Bold"/>
+                                                </Frame>
+                                            </Grid>
+                                            <HorizontalStackLayout Spacing="8">
+                                                <Label Text="📅" FontSize="11" VerticalOptions="Center"/>
+                                                <Label Text="{Binding FechaFormateada}" TextColor="#8FA7B8" FontSize="11" VerticalOptions="Center"/>
+                                                <Label Text="|" TextColor="#E2E8F0" FontSize="11"/>
+                                                <Label Text="👥" FontSize="11" VerticalOptions="Center"/>
+                                                <Label Text="{Binding tipo_evento}" TextColor="#8FA7B8" FontSize="11" VerticalOptions="Center"/>
+                                            </HorizontalStackLayout>
+                                            <BoxView HeightRequest="1" Color="#F3F5F6" Margin="0,6,0,0"/>
+                                        </VerticalStackLayout>
+                                    </DataTemplate>
+                                </CollectionView.ItemTemplate>
+                            </CollectionView>
+                        </VerticalStackLayout>
+                    </Frame>
+                </VerticalStackLayout>
+
+            </Grid>
 
         </VerticalStackLayout>
     </ScrollView>

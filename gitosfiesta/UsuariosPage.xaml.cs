@@ -1,4 +1,5 @@
 using gitosfiesta.Models;
+using System.Collections.ObjectModel;
 using System.Text.RegularExpressions;
 
 namespace gitosfiesta;
@@ -6,34 +7,32 @@ namespace gitosfiesta;
 public partial class UsuariosPage : ContentPage
 {
     private readonly Supabase.Client _supabaseClient;
-    private List<Usuario> _listaUsuariosActivos = new();
+    public ObservableCollection<Usuario> UsuariosRegistradosList { get; set; } = new();
 
     public UsuariosPage(Supabase.Client supabaseClient)
     {
         InitializeComponent();
         _supabaseClient = supabaseClient;
+        ColeccionUsuariosRegistrados.ItemsSource = UsuariosRegistradosList;
     }
 
-    protected override void OnAppearing()
+    protected override async void OnAppearing()
     {
         base.OnAppearing();
 
         string rolUsuario = SessionContext.Rol?.ToUpper() ?? "";
 
-        // Si NO es Administrador ni Dev, ocultamos los paneles y mostramos mensaje
         if (rolUsuario != "ADMINISTRADOR" && rolUsuario != "DEV")
         {
             PanelCrearUsuario.IsVisible = false;
-            PanelEliminarUsuario.IsVisible = false;
             LblAccesoDenegado.IsVisible = true;
         }
         else
         {
             PanelCrearUsuario.IsVisible = true;
-            PanelEliminarUsuario.IsVisible = true;
             LblAccesoDenegado.IsVisible = false;
 
-            _ = CargarUsuariosParaEliminarAsync();
+            await CargarUsuariosAsync();
         }
     }
 
@@ -42,27 +41,24 @@ public partial class UsuariosPage : ContentPage
         if (sender is Entry entry)
         {
             string textoActual = e.NewTextValue ?? "";
-
-            // 1. Reemplazar cualquier carácter que no sea letra o espacio
             string textoFiltrado = Regex.Replace(textoActual, @"[^a-zA-ZÁÉÍÓÚáéíóúÑñÜü\s]", "");
-
-            // 2. Reemplazar dos o más espacios seguidos por un solo espacio
             textoFiltrado = Regex.Replace(textoFiltrado, @"\s+", " ");
 
             if (textoFiltrado != textoActual)
             {
                 entry.Text = textoFiltrado;
-                return; // Evita bucles infinitos al reasignar el texto al Entry
+                return;
             }
         }
 
-        string nombre = TxtNuevoNombre.Text?.Trim() ?? "";
+        string nombreCompleto = TxtNuevoNombre.Text?.Trim() ?? "";
         string apellido = TxtNuevoApellido.Text?.Trim() ?? "";
 
-        string nombreCompleto = nombre.Replace(" ", "");
+        // Generar usuario usando únicamente el primer nombre + 3 letras del apellido
+        string primerNombre = nombreCompleto.Split(' ').FirstOrDefault() ?? "";
         string parteApellido = apellido.Length >= 3 ? apellido.Substring(0, 3) : apellido;
 
-        TxtNuevoUsuario.Text = (nombreCompleto + parteApellido).ToUpper();
+        TxtNuevoUsuario.Text = (primerNombre + parteApellido).ToUpper();
     }
 
     private async void OnCrearUsuarioClicked(object sender, EventArgs e)
@@ -93,10 +89,15 @@ public partial class UsuariosPage : ContentPage
             };
 
             await _supabaseClient.From<Usuario>().Insert(nuevoUsuario);
-            await DisplayAlert("¡Éxito!", $"Usuario creado correctamente.", "Aceptar");
+            await DisplayAlert("¡Éxito!", "Usuario creado correctamente.", "Aceptar");
 
-            TxtNuevoNombre.Text = ""; TxtNuevoApellido.Text = ""; TxtNuevoUsuario.Text = ""; TxtNuevaPassword.Text = ""; PickerRol.SelectedIndex = -1;
-            await CargarUsuariosParaEliminarAsync();
+            TxtNuevoNombre.Text = "";
+            TxtNuevoApellido.Text = "";
+            TxtNuevoUsuario.Text = "";
+            TxtNuevaPassword.Text = "";
+            PickerRol.SelectedIndex = -1;
+
+            await CargarUsuariosAsync();
         }
         catch (Exception ex)
         {
@@ -104,35 +105,75 @@ public partial class UsuariosPage : ContentPage
         }
     }
 
-    private async Task CargarUsuariosParaEliminarAsync()
+    private async Task CargarUsuariosAsync()
     {
         try
         {
             var response = await _supabaseClient.From<Usuario>().Get();
-            _listaUsuariosActivos = (response.Models ?? new List<Usuario>()).Where(u => u.Id != SessionContext.UsuarioId).ToList();
-            PickerUsuariosAEliminar.ItemsSource = _listaUsuariosActivos;
+            var todos = response.Models ?? new List<Usuario>();
+
+            // Filtramos para excluir a los usuarios con AccessType igual a "DEV" (ignorando mayúsculas/minúsculas)
+            var usuariosFiltrados = todos
+                .Where(u => string.IsNullOrEmpty(u.AccessType) || !u.AccessType.Equals("DEV", StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            UsuariosRegistradosList.Clear();
+            foreach (var u in usuariosFiltrados)
+            {
+                UsuariosRegistradosList.Add(u);
+            }
         }
         catch { }
     }
 
-    private async void OnEliminarUsuarioClicked(object sender, EventArgs e)
+    private async void OnEliminarUsuarioDirectoClicked(object sender, EventArgs e)
     {
-        var usuarioSeleccionado = PickerUsuariosAEliminar.SelectedItem as Usuario;
-        if (usuarioSeleccionado == null) return;
-
-        bool confirmar = await DisplayAlert("Confirmar", $"¿Eliminar a {usuarioSeleccionado.NombreUsuario}?", "Sí", "No");
-        if (!confirmar) return;
-
-        try
+        if (sender is Button button && button.CommandParameter is Usuario usuarioSeleccionado)
         {
-            await _supabaseClient.From<Usuario>().Where(x => x.Id == usuarioSeleccionado.Id).Delete();
-            await DisplayAlert("Eliminado", "Usuario borrado.", "Aceptar");
-            PickerUsuariosAEliminar.SelectedIndex = -1;
-            await CargarUsuariosParaEliminarAsync();
+            if (usuarioSeleccionado.Id == SessionContext.UsuarioId)
+            {
+                await DisplayAlert("No permitido", "No puedes eliminar tu propia cuenta mientras estás conectado.", "Aceptar");
+                return;
+            }
+
+            bool confirmar = await DisplayAlert("Confirmar", $"¿Estás seguro de eliminar permanentemente a {usuarioSeleccionado.NombreUsuario}?", "Sí", "No");
+            if (!confirmar) return;
+
+            try
+            {
+                await _supabaseClient.From<Usuario>().Where(x => x.Id == usuarioSeleccionado.Id).Delete();
+                await DisplayAlert("Eliminado", "Usuario borrado correctamente.", "Aceptar");
+                await CargarUsuariosAsync();
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", ex.Message, "Aceptar");
+            }
         }
-        catch (Exception ex)
+    }
+
+    private async void OnResetearPasswordClicked(object sender, EventArgs e)
+    {
+        if (sender is Button button && button.CommandParameter is Usuario usuarioSeleccionado)
         {
-            await DisplayAlert("Error", ex.Message, "Aceptar");
+            string nuevaPassword = await DisplayPromptAsync("Resetear Contraseña", $"Ingresa la nueva contraseña para {usuarioSeleccionado.NombreUsuario}:", "Guardar", "Cancelar", keyboard: Keyboard.Plain);
+
+            if (string.IsNullOrWhiteSpace(nuevaPassword)) return;
+
+            try
+            {
+                await _supabaseClient
+                    .From<Usuario>()
+                    .Where(x => x.Id == usuarioSeleccionado.Id)
+                    .Set(x => x.Password, nuevaPassword.Trim())
+                    .Update();
+
+                await DisplayAlert("¡Éxito!", $"La contraseña de {usuarioSeleccionado.NombreUsuario} ha sido actualizada.", "Aceptar");
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"No se pudo actualizar la contraseña: {ex.Message}", "Aceptar");
+            }
         }
     }
 }

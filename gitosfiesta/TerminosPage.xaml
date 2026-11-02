@@ -1,0 +1,65 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
+             x:Class="gitosfiesta.TerminosPage"
+             Title="Términos y Condiciones"
+             Shell.NavBarIsVisible="False"
+
+             BackgroundColor="#FFFFFF">
+
+    <ScrollView>
+        <VerticalStackLayout Spacing="20" Padding="24" MaximumWidthRequest="900" HorizontalOptions="Center">
+
+            <!-- Cabecera -->
+            <HorizontalStackLayout Spacing="12" HorizontalOptions="Center" Margin="0,10,0,0">
+                <Label Text="📜" FontSize="26" VerticalOptions="Center"/>
+                <Label Text="Términos y Condiciones - Gitos Fiesta" 
+                       FontSize="22" 
+                       FontAttributes="Bold" 
+                       TextColor="#1B1464" 
+                       VerticalOptions="Center"/>
+            </HorizontalStackLayout>
+
+            <!-- Tarjeta Contenedora Principal -->
+            <Border BackgroundColor="#FFFFFF"
+                    Stroke="#EAE4DC"
+                    StrokeThickness="1"
+                    Padding="25">
+                <Border.StrokeShape>
+                    <shapes:RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16">
+
+                    <!-- Alerta / Aviso Rosa Clarito #F0DCE2 -->
+                    <Border BackgroundColor="#F0DCE2" Stroke="#E2CBD3" StrokeThickness="1" Padding="12">
+                        <Border.StrokeShape>
+                            <shapes:RoundRectangle CornerRadius="8"/>
+                        </Border.StrokeShape>
+                        <Label Text="Por favor, lee detenidamente las políticas y lineamientos del salón antes de confirmar cualquier evento." 
+                               FontSize="13" 
+                               TextColor="#881337" 
+                               FontAttributes="Bold"/>
+                    </Border>
+
+                    <!-- Contenedor dinámico donde se cargan los términos de la base de datos -->
+                    <VerticalStackLayout x:Name="ContenedorTerminos" Spacing="4"/>
+
+                    <!-- Botón de Entendido -->
+                    <Button Text="Entendido" 
+                            BackgroundColor="#475569" 
+                            TextColor="White" 
+                            FontAttributes="Bold" 
+                            FontSize="15"
+                            CornerRadius="12" 
+                            HeightRequest="48"
+                            Margin="0,15,0,0"
+                            Clicked="OnEntendidoClicked"/>
+
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,24 +1,51 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
              x:Class="gitosfiesta.PizarronFirmaPage"
-             Title="Pizarrón de Firma"
-             BackgroundColor="White">
+             BackgroundColor="#80000000"
+             Shell.NavBarIsVisible="False">
 
-    <Grid RowDefinitions="*, Auto" Padding="20">
-        <!-- Lienzo de dibujo interactivo -->
-        <Frame Grid.Row="0" BorderColor="#00D2C4" CornerRadius="10" Padding="0" BackgroundColor="#F8F9FA">
-            <GraphicsView x:Name="CanvasFirma" />
-        </Frame>
+    <!-- Contenedor general que centra la tarjeta modal -->
+    <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
 
-        <!-- Botones de control -->
-        <Grid Grid.Row="1" ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,15,0,0">
-            <Button Grid.Column="0" Text="Borrar" 
-                    BackgroundColor="#E57373" TextColor="White" 
-                    CornerRadius="10" Clicked="OnBorrarClicked"/>
-            <Button Grid.Column="1" Text="Guardar Firma" 
-                    BackgroundColor="#00D2C4" TextColor="White" 
-                    CornerRadius="10" Clicked="OnGuardarFirmaClicked"/>
-        </Grid>
+        <!-- Tarjeta flotante del pizarrón -->
+        <Border BackgroundColor="White" Stroke="#CBD5E1" StrokeThickness="1" Padding="20" MaximumWidthRequest="600" HorizontalOptions="Center" VerticalOptions="Center">
+            <Border.StrokeShape>
+                <shapes:RoundRectangle CornerRadius="16"/>
+            </Border.StrokeShape>
+
+            <VerticalStackLayout Spacing="15">
+
+                <!-- ENCABEZADO: Título centrado y Botón "X" para cerrar a la derecha -->
+                <Grid ColumnDefinitions="*, Auto" VerticalOptions="Center">
+                    <Label Grid.Column="0" Text="✍️ Pizarrón de Firma" FontAttributes="Bold" FontSize="18" TextColor="#1E293B" VerticalOptions="Center" HorizontalOptions="Center"/>
+
+                    <Button Grid.Column="1" 
+                            Text="✕" 
+                            TextColor="#64748B" 
+                            BackgroundColor="Transparent" 
+                            FontSize="18" 
+                            FontAttributes="Bold"
+                            HeightRequest="36" 
+                            WidthRequest="36" 
+                            CornerRadius="18"
+                            Clicked="OnCerrarModalClicked"
+                            VerticalOptions="Center"
+                            HorizontalOptions="End"/>
+                </Grid>
+
+                <!-- Lienzo de Firma -->
+                <GraphicsView x:Name="CanvasFirma" HeightRequest="250" WidthRequest="540" BackgroundColor="#F8F9FA"/>
+
+                <!-- Botones de Acción -->
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="15">
+                    <Button Grid.Column="0" Text="Borrar" BackgroundColor="#EF4444" TextColor="White" FontAttributes="Bold" CornerRadius="10" HeightRequest="45" Clicked="OnBorrarClicked"/>
+                    <Button Grid.Column="1" Text="Guardar Firma" BackgroundColor="#00D2C4" TextColor="#1E293B" FontAttributes="Bold" CornerRadius="10" HeightRequest="45" Clicked="OnGuardarFirmaClicked"/>
+                </Grid>
+
+            </VerticalStackLayout>
+        </Border>
+
     </Grid>
 </ContentPage>

@@ -63,6 +63,7 @@ public partial class PizarronFirmaPage : ContentPage, IDrawable
             }
         }
     }
+
     private void OnBorrarClicked(object sender, EventArgs e)
     {
         _trazos.Clear();
@@ -70,6 +71,10 @@ public partial class PizarronFirmaPage : ContentPage, IDrawable
         CanvasFirma.Invalidate();
     }
 
+    private async void OnCerrarModalClicked(object sender, EventArgs e)
+    {
+        await Navigation.PopModalAsync();
+    }
     private async void OnGuardarFirmaClicked(object sender, EventArgs e)
     {
         if (_trazos.Count == 0)
@@ -86,6 +91,8 @@ public partial class PizarronFirmaPage : ContentPage, IDrawable
             FirmaBase64 = Convert.ToBase64String(memoryStream.ToArray());
         }
 
-        await Navigation.PopAsync();
+        // CORREGIDO: Al abrirse como modal, se debe cerrar con PopModalAsync
+        await Navigation.PopModalAsync();
     }
+
 }

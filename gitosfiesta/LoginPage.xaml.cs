@@ -94,102 +94,174 @@ public partial class LoginPage : ContentPage
                 return;
             }
 
-            // 1. Instanciamos el Shell eliminando los colores oscuros de la NavigationBar
+            // 1. Instanciamos el Shell configurando el fondo general del menú lateral
             var shell = new Shell
             {
-                FlyoutBackgroundColor = Color.FromArgb("#F8F9FE")
+                FlyoutBackgroundColor = Color.FromArgb("#F8FAFC") // Fondo gris claro muy moderno y limpio
             };
 
-            // Eliminamos la barra negra superior y ponemos el turquesa de Gitos Fiesta
-            Shell.SetBackgroundColor(shell, Color.FromArgb("#00D2C4"));
+            // Color de la barra superior principal
+            Shell.SetBackgroundColor(shell, Color.FromArgb("#1B1464"));
             Shell.SetForegroundColor(shell, Colors.White);
             Shell.SetTitleColor(shell, Colors.White);
 
-            // 2. Encabezado superior con la marca Gitos Fiesta
-            var headerLayout = new VerticalStackLayout
+            // 2. ENCABEZADO FLOTANTE CON DISEÑO ELEGANTE Y FONDO #DCE8F0
+            var headerLayout = new Grid
             {
-                Padding = new Thickness(20, 35, 20, 15),
-                Spacing = 10,
-                Children =
-                {
-                    new Image
-                    {
-                        Source = "alargado.png",
-                        Aspect = Aspect.AspectFit,
-                        HorizontalOptions = LayoutOptions.Start
-                    },
-                }
+                HeightRequest = 210,
+                BackgroundColor = Color.FromArgb("#F8FAFC"), // Fondo del menú lateral
+                Padding = new Thickness(16, 20, 16, 10)
             };
 
-            shell.FlyoutHeader = headerLayout;
+            // Tarjeta flotante con el fondo celeste claro y esquinas muy redondeadas
+            var tarjetaHeader = new Border
+            {
+                BackgroundColor = Color.FromArgb("#DCE8F0"),
+                StrokeShape = new RoundRectangle { CornerRadius = 16 },
+                Stroke = Color.FromArgb("#CBD5E1"),
+                StrokeThickness = 1,
+                Padding = new Thickness(15),
+                HorizontalOptions = LayoutOptions.Fill,
+                VerticalOptions = LayoutOptions.Fill
+            };
 
-            // 3. Plantilla de botones del menú
+            // Contenido centrado dentro de la tarjeta
+            var contentLayout = new VerticalStackLayout
+            {
+                VerticalOptions = LayoutOptions.Center,
+                HorizontalOptions = LayoutOptions.Center,
+                Spacing = 8,
+                Children =
+            {
+                new Border
+                {
+                    WidthRequest = 56,
+                    HeightRequest = 56,
+                    BackgroundColor = Colors.White,
+                    StrokeShape = new RoundRectangle { CornerRadius = 28 },
+                    Stroke = Color.FromArgb("#00D2C4"),
+                    StrokeThickness = 2,
+                    HorizontalOptions = LayoutOptions.Center,
+                    Content = new Image
+                    {
+                        Source = "imagen1.png",
+                        WidthRequest = 34,
+                        HeightRequest = 34,
+                        Aspect = Aspect.AspectFit,
+                        HorizontalOptions = LayoutOptions.Center,
+                        VerticalOptions = LayoutOptions.Center
+                    }
+                },
+                new Label
+                {
+                    Text = "Gitos Fiesta",
+                    TextColor = Color.FromArgb("#1E293B"),
+                    FontSize = 17,
+                    FontAttributes = FontAttributes.Bold,
+                    HorizontalTextAlignment = TextAlignment.Center
+                },
+                new Label
+                {
+                    Text = "Panel de Control",
+                    TextColor = Color.FromArgb("#64748B"),
+                    FontSize = 11,
+                    HorizontalTextAlignment = TextAlignment.Center
+                }
+            }
+            };
+
+            tarjetaHeader.Content = contentLayout;
+            headerLayout.Children.Add(tarjetaHeader);
+            shell.FlyoutHeader = headerLayout;
+            // 3. Plantilla de botones del menú optimizada (Estilo tarjeta moderna con icono y texto)
             shell.ItemTemplate = new DataTemplate(() =>
             {
                 var border = new Border
                 {
-                    BackgroundColor = Color.FromArgb("#EAE8F8"),
-                    StrokeShape = new RoundRectangle { CornerRadius = 14 },
-                    Stroke = Colors.Transparent,
-                    Padding = new Thickness(16, 12),
-                    Margin = new Thickness(16, 4)
+                    BackgroundColor = Color.FromArgb("#FFFFFF"),
+                    StrokeShape = new RoundRectangle { CornerRadius = 12 },
+                    Stroke = Color.FromArgb("#E2E8F0"),
+                    StrokeThickness = 1,
+                    Padding = new Thickness(14, 10),
+                    Margin = new Thickness(12, 6),
+                    HorizontalOptions = LayoutOptions.Fill
                 };
+
+                var layoutInterno = new HorizontalStackLayout
+                {
+                    Spacing = 12,
+                    VerticalOptions = LayoutOptions.Center
+                };
+
+                var imgIcono = new Image
+                {
+                    WidthRequest = 22,
+                    HeightRequest = 22,
+                    VerticalOptions = LayoutOptions.Center,
+                    Aspect = Aspect.AspectFit
+                };
+                imgIcono.SetBinding(Image.SourceProperty, "Icon");
 
                 var label = new Label
                 {
-                    FontSize = 15,
-                    TextColor = Color.FromArgb("#3F3B78"),
+                    FontSize = 14,
+                    TextColor = Color.FromArgb("#1E293B"),
                     FontAttributes = FontAttributes.Bold,
                     VerticalOptions = LayoutOptions.Center
                 };
                 label.SetBinding(Label.TextProperty, "Title");
 
-                border.Content = label;
+                layoutInterno.Children.Add(imgIcono);
+                layoutInterno.Children.Add(label);
+
+                border.Content = layoutInterno;
                 return border;
             });
 
-            // 4. Pie de página del menú (Perfil del Usuario y Botón Salir)
+            // 4. Pie de página del menú rediseñado (Perfil de Usuario y Botón de Salir Estilizado)
             var footerLayout = new Grid
             {
-                Padding = new Thickness(20, 15),
-                BackgroundColor = Color.FromArgb("#F0EEF9"),
+                Padding = new Thickness(16, 14),
+                BackgroundColor = Color.FromArgb("#F1F5F9"),
                 ColumnDefinitions =
-                {
-                    new ColumnDefinition { Width = GridLength.Star },
-                    new ColumnDefinition { Width = GridLength.Auto }
-                }
+            {
+                new ColumnDefinition { Width = GridLength.Star },
+                new ColumnDefinition { Width = GridLength.Auto }
+            }
             };
 
             var userDetails = new VerticalStackLayout
             {
                 Spacing = 2,
+                VerticalOptions = LayoutOptions.Center,
                 Children =
+            {
+                new Label
                 {
-                    new Label
-                    {
-                        Text = SessionContext.NombreCompleto,
-                        TextColor = Color.FromArgb("#2D2B55"),
-                        FontSize = 14,
-                        FontAttributes = FontAttributes.Bold
-                    },
-                    new Label
-                    {
-                        Text = SessionContext.Rol,
-                        TextColor = Color.FromArgb("#8A88AD"),
-                        FontSize = 12
-                    }
+                    Text = SessionContext.NombreCompleto,
+                    TextColor = Color.FromArgb("#0F172A"),
+                    FontSize = 13,
+                    FontAttributes = FontAttributes.Bold
+                },
+                new Label
+                {
+                    Text = SessionContext.Rol,
+                    TextColor = Color.FromArgb("#64748B"),
+                    FontSize = 11
                 }
+            }
             };
 
             var btnCerrarSesion = new Button
             {
                 Text = "Salir",
-                BackgroundColor = Color.FromArgb("#E57373"),
+                BackgroundColor = Color.FromArgb("#EF4444"), // Tono coral/rojo moderno y limpio
                 TextColor = Colors.White,
                 FontAttributes = FontAttributes.Bold,
+                FontSize = 13,
                 CornerRadius = 8,
-                HeightRequest = 35,
-                Padding = new Thickness(15, 0),
+                HeightRequest = 36,
+                Padding = new Thickness(14, 0),
                 VerticalOptions = LayoutOptions.Center
             };
 
@@ -216,16 +288,28 @@ public partial class LoginPage : ContentPage
             footerLayout.Children.Add(btnCerrarSesion);
             shell.FlyoutFooter = footerLayout;
 
-            // 5. Cargar los elementos del menú
+            // 5. Cargar los elementos del menú dinámicamente
             foreach (var item in menuItems)
             {
                 var contentPage = ObtenerPaginaDinamica(item.ApiController);
 
                 if (contentPage != null)
                 {
+                    string iconoAsignado = "dotnet_bot.png";
+                    string desc = item.Description?.ToLower() ?? "";
+                    string controller = item.ApiController?.ToLower() ?? "";
+
+                    if (desc.Contains("inicio") || controller.Contains("home"))
+                        iconoAsignado = "dotnet_bot.png";
+                    else if (desc.Contains("evento") || controller.Contains("evento"))
+                        iconoAsignado = "dotnet_bot.png";
+                    else if (desc.Contains("usuario") || controller.Contains("usuario"))
+                        iconoAsignado = "dotnet_bot.png";
+
                     var flyoutItem = new FlyoutItem
                     {
                         Title = item.Description,
+                        Icon = iconoAsignado,
                         Items = { new ShellContent { Content = contentPage } }
                     };
 
@@ -247,7 +331,6 @@ public partial class LoginPage : ContentPage
             await DisplayAlert("Error", $"No se pudo cargar el menú dinámico: {ex.Message}", "Aceptar");
         }
     }
-
     private Page? ObtenerPaginaDinamica(string nombreApi)
     {
         try

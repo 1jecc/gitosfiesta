@@ -8,6 +8,8 @@ public partial class ContratoPage : ContentPage
     private readonly long _eventoId;
     private EventoModel? _eventoActual;
     private string? _firmaBase64;
+    private List<MiscModel> _listaTerminosCache = new(); // Para guardar los términos cargados
+    private bool _datosCargados = false; // Bandera para evitar que se reseteen los datos
 
     public ContratoPage(Supabase.Client supabaseClient, long eventoId)
     {
@@ -19,7 +21,13 @@ public partial class ContratoPage : ContentPage
     protected override async void OnAppearing()
     {
         base.OnAppearing();
-        await CargarDatosContratoAsync();
+
+        // Solo cargamos la información la primera vez que entra para evitar que se borre al regresar de otras vistas
+        if (!_datosCargados)
+        {
+            await CargarDatosContratoAsync();
+            _datosCargados = true;
+        }
     }
 
     private async Task CargarDatosContratoAsync()
@@ -60,19 +68,19 @@ public partial class ContratoPage : ContentPage
                 }
             }
 
-            // 2. Cargar términos y condiciones sin duplicar
+            // 2. Cargar términos y condiciones y guardarlos en caché
             var responseMisc = await _supabaseClient
                 .From<MiscModel>()
                 .Where(x => x.categoria == "TERMINO_CONTRATO" && x.enable == true)
                 .Get();
 
-            var terminos = responseMisc.Models?
+            _listaTerminosCache = responseMisc.Models?
                 .OrderBy(x => int.TryParse(x.value1, out int num) ? num : 0)
-                .ToList();
+                .ToList() ?? new List<MiscModel>();
 
-            if (terminos != null && terminos.Count > 0)
+            if (_listaTerminosCache.Count > 0)
             {
-                LblTerminos.Text = string.Join("\n\n", terminos.Select(t => $"{t.value1}.- {t.value2}"));
+                LblTerminos.Text = string.Join("\n\n", _listaTerminosCache.Select(t => $"{t.value1}.- {t.value2}"));
             }
             else
             {
@@ -82,6 +90,19 @@ public partial class ContratoPage : ContentPage
         catch (Exception ex)
         {
             await DisplayAlert("Error", $"No se pudo cargar el contrato: {ex.Message}", "Aceptar");
+        }
+    }
+
+    // Método para abrir la página independiente de Términos y Condiciones al presionar el botón
+    private async void OnVerTerminosClicked(object sender, EventArgs e)
+    {
+        if (_listaTerminosCache.Count > 0)
+        {
+            await Navigation.PushAsync(new TerminosPage(_listaTerminosCache));
+        }
+        else
+        {
+            await DisplayAlert("Aviso", "Los términos aún no se han cargado o no están disponibles.", "Aceptar");
         }
     }
 
@@ -99,7 +120,8 @@ public partial class ContratoPage : ContentPage
             }
         };
 
-        await Navigation.PushAsync(pizarronPage);
+        // Abre la página directamente como modal limpio
+        await Navigation.PushModalAsync(pizarronPage);
     }
 
     private async void OnFinalizarContratoClicked(object sender, EventArgs e)

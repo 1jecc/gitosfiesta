@@ -10,13 +10,12 @@ public partial class ListaEventoPage : ContentPage
     private EventoModel? _eventoActual;
     private bool _isInitialized = false;
     private bool _isProcessing = false;
-
-    // Variables para el filtrado dinámico en los Pickers
-    private List<UsuarioModelObj> _listaStaffObjetos = new(); // Almacena objetos completos con su ID
+    private long? _idEventoInicial = null; // Variable para recordar si venimos desde el Dashboard 
+    private List<UsuarioModelObj> _listaStaffObjetos = new();
     private List<string> _nombresStaffGlobal = new();
     private readonly List<string> _rolesMeserosBase = new() { "Principal / Barra", "Atención a Mesas", "Apoyo General" };
     private bool _isUpdatingPickers = false;
-    private bool _eventoTieneStaffAsignado = false; // Bandera para cambiar el comportamiento del botón
+    private bool _eventoTieneStaffAsignado = false;
 
     public ObservableCollection<EventoModel> EventosFiltrados { get; set; } = new();
     public ObservableCollection<AbonoModel> HistorialModalAbonos { get; set; } = new();
@@ -24,6 +23,8 @@ public partial class ListaEventoPage : ContentPage
 
     private decimal _saldoPendienteModalActual = 0;
 
+
+    // Constructor 1: Para cuando entras desde el menú general
     public ListaEventoPage(Supabase.Client supabaseClient)
     {
         InitializeComponent();
@@ -37,16 +38,103 @@ public partial class ListaEventoPage : ContentPage
         DatePickerHasta.Date = hoy.AddDays(15);
     }
 
+    // Constructor 2: NUEVO - Para cuando abres un evento específico desde el Dashboard (Inicio)
+    // Constructor 2: Para cuando abres un evento específico desde el Dashboard (Inicio)
+    public ListaEventoPage(Supabase.Client supabaseClient, long eventoId)
+    {
+        InitializeComponent();
+        _supabaseClient = supabaseClient;
+        _idEventoInicial = eventoId; // <-- ¡Aquí faltaba guardar esta variable!
+
+        ColeccionEventos.ItemsSource = EventosFiltrados;
+        ColeccionModalHistorial.ItemsSource = HistorialModalAbonos;
+        ColeccionStaffAsignado.ItemsSource = StaffAsignadoList;
+
+        // Carga directamente el detalle del evento específico por su ID
+        _ = CargarDetallePorIdAsync(eventoId);
+    }
+
+    private async Task CargarDetallePorIdAsync(long idEvento)
+    {
+        try
+        {
+            var response = await _supabaseClient
+                .From<EventoModel>()
+                .Filter("id", Supabase.Postgrest.Constants.Operator.Equals, idEvento)
+                .Get();
+
+            var evento = response.Models?.FirstOrDefault();
+            if (evento != null)
+            {
+                _eventoActual = evento;
+
+                // Calculamos el total abonado igual que al hacer clic en la lista
+                decimal totalAbonado = 0;
+                try
+                {
+                    var responseAbonos = await _supabaseClient
+                        .From<AbonoModel>()
+                        .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, evento.Id)
+                        .Get();
+
+                    totalAbonado = (decimal)(responseAbonos.Models ?? new List<AbonoModel>()).Sum(a => a.Monto);
+                }
+                catch
+                {
+                    totalAbonado = 0;
+                }
+
+                // Verificamos staff y pintamos los detalles en pantalla
+                await VerificarStaffAsignadoAsync(evento.Id);
+                PintarDetallesEvento(evento, totalAbonado);
+                ModoEdicionActivo(false);
+
+                if (BtnModificarEvento != null)
+                {
+                    int diasRestantes = (evento.fecha_evento.Date - DateTime.Today).Days;
+                    BtnModificarEvento.IsVisible = (diasRestantes > 10);
+                }
+
+                // Ocultamos la lista y mostramos el panel de detalles con la información lista
+                PanelLista.IsVisible = false;
+                PanelDetalle.IsVisible = true;
+            }
+            else
+            {
+                await DisplayAlert("Aviso", "No se encontró el evento solicitado.", "Aceptar");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al cargar detalle: {ex.Message}");
+        }
+    }
     protected override async void OnAppearing()
     {
         base.OnAppearing();
 
+        // Si entramos directos desde el Dashboard con un ID, cargamos ese detalle y evitamos resetear la vista
+        if (_idEventoInicial.HasValue)
+        {
+            long idACargar = _idEventoInicial.Value;
+            _idEventoInicial = null; // Limpiamos para que futuras navegaciones funcionen normal
+            await CargarDetallePorIdAsync(idACargar);
+            return;
+        }
+
+        // Comportamiento normal para la lista general
         PanelDetalle.IsVisible = false;
         PanelLista.IsVisible = true;
         _eventoActual = null;
+        ModoEdicionActivo(false);
 
         if (PickerFiltro != null) PickerFiltro.SelectedIndex = 2;
         if (PickerEstatus != null && PickerEstatus.SelectedIndex == -1) PickerEstatus.SelectedIndex = 0;
+
+        // 👇 RESTABLECER LOS FILTROS DE FECHA PARA QUE NO OCULTEN LOS DEMÁS EVENTOS 👇
+        // (Ajusta los nombres "DatePickerDesde" y "DatePickerHasta" con los nombres reales de tus controles en el XAML si difieren)
+        if (DatePickerDesde != null) DatePickerDesde.Date = DateTime.Today.AddMonths(-1); // O un rango inicial adecuado
+        if (DatePickerHasta != null) DatePickerHasta.Date = DateTime.Today.AddMonths(3);  // O déjalos en null si tu lógica lo permite
 
         _isInitialized = true;
         await CargarEventosAsync();
@@ -99,36 +187,38 @@ public partial class ListaEventoPage : ContentPage
                 .Get();
 
             var listaAbonos = responseAbonos.Models ?? new List<AbonoModel>();
-            totalAbonado = listaAbonos.Sum(a => a.Monto);
+            totalAbonado = (decimal)listaAbonos.Sum(a => a.Monto);
         }
         catch (Exception)
         {
             totalAbonado = 0;
         }
 
-        // ¡AQUÍ ESTABA EL DETALLE! Llamamos a la verificación para actualizar el estado del botón
         await VerificarStaffAsignadoAsync(evento.Id);
-
         PintarDetallesEvento(evento, totalAbonado);
+        ModoEdicionActivo(false);
+
+        // Habilitar / Mostrar botón de Modificar SOLO si faltan MÁS de 10 días
+        if (BtnModificarEvento != null)
+        {
+            int diasRestantes = (evento.fecha_evento.Date - DateTime.Today).Days;
+            BtnModificarEvento.IsVisible = (diasRestantes > 10);
+        }
 
         PanelLista.IsVisible = false;
         PanelDetalle.IsVisible = true;
     }
 
-
     private async Task VerificarStaffAsignadoAsync(long eventoId)
     {
         try
         {
-            // Consultamos directamente por evento_id sin restricciones extra que puedan fallar
             var response = await _supabaseClient
                 .From<EventoPersonalModel>()
                 .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, eventoId)
                 .Get();
 
             var asignaciones = response.Models ?? new List<EventoPersonalModel>();
-
-            // Verificamos si realmente existen registros guardados para este evento
             _eventoTieneStaffAsignado = asignaciones.Count > 0;
 
             ActualizarBotonStaffUI();
@@ -147,12 +237,12 @@ public partial class ListaEventoPage : ContentPage
             if (_eventoTieneStaffAsignado)
             {
                 BtnAsignarPersonal.Text = "👥 Staff Asignado";
-                BtnAsignarPersonal.BackgroundColor = Color.FromArgb("#2B6CB0"); // Azul distintivo
+                BtnAsignarPersonal.BackgroundColor = Color.FromArgb("#2B6CB0");
             }
             else
             {
                 BtnAsignarPersonal.Text = "👥 Asignar Personal";
-                BtnAsignarPersonal.BackgroundColor = Color.FromArgb("#319795"); // Turquesa original
+                BtnAsignarPersonal.BackgroundColor = Color.FromArgb("#319795");
             }
         }
     }
@@ -197,6 +287,171 @@ public partial class ListaEventoPage : ContentPage
         }
     }
 
+    private async void OnVerComprobanteAbonoClicked(object sender, EventArgs e)
+    {
+        if (sender is Button button && button.CommandParameter is AbonoModel abonoSeleccionado)
+        {
+            if (_eventoActual == null) return;
+
+            try
+            {
+                var responseAbonos = await _supabaseClient
+                    .From<AbonoModel>()
+                    .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, _eventoActual.Id)
+                    .Get();
+
+                var listaAbonos = responseAbonos.Models?.OrderBy(a => a.FechaPago).ToList() ?? new List<AbonoModel>();
+
+                decimal saldoAcumulado = _eventoActual.precio;
+                decimal saldoAnterior = saldoAcumulado;
+
+                foreach (var a in listaAbonos)
+                {
+                    if (a.Id == abonoSeleccionado.Id) break;
+                    saldoAcumulado -= (decimal)a.Monto;
+                }
+                saldoAnterior = saldoAcumulado;
+
+                var pdfService = new AbonoPdfService(_eventoActual, abonoSeleccionado, saldoAnterior);
+                byte[] pdfBytes = pdfService.GenerarPdf();
+
+                string fileName = $"Comprobante_AB-{abonoSeleccionado.Id}.pdf";
+                string filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
+                File.WriteAllBytes(filePath, pdfBytes);
+
+                await Launcher.OpenAsync(new OpenFileRequest
+                {
+                    Title = "Comprobante de Abono - Gitos Fiesta",
+                    File = new ReadOnlyFile(filePath)
+                });
+            }
+            catch (Exception ex)
+            {
+                await DisplayAlert("Error", $"No se pudo generar el comprobante: {ex.Message}", "Aceptar");
+            }
+        }
+    }
+
+    // ==========================================
+    // LÓGICA DE EDICIÓN DEL EVENTO EN LA MISMA VISTA
+    // ==========================================
+    private async void OnModificarEventoClicked(object sender, EventArgs e)
+    {
+        if (_eventoActual == null) return;
+
+        // Validación estricta: solo se permite modificar si faltan más de 10 días
+        int diasRestantes = (_eventoActual.fecha_evento.Date - DateTime.Today).Days;
+        if (diasRestantes <= 10)
+        {
+            await DisplayAlert(
+                "No permitido",
+                $"Este evento ocurrirá en {diasRestantes} días. Solo se permite editar si faltan más de 10 días.",
+                "Aceptar"
+            );
+            return;
+        }
+
+        // Abre exactamente la misma vista de configuración y opciones de "NuevoEventoPage" 
+        // pero cargando la información de este evento gracias al _eventoActual.Id
+        await Navigation.PushAsync(new NuevoEventoPage(_supabaseClient, _eventoActual.Id));
+    }
+
+    private async void OnGuardarModificacionClicked(object sender, EventArgs e)
+    {
+        if (_eventoActual == null) return;
+
+        if (string.IsNullOrWhiteSpace(TxtEditCliente.Text) ||
+            string.IsNullOrWhiteSpace(TxtEditTelefono.Text) ||
+            !int.TryParse(TxtEditPersonas.Text, out int numPersonas) || numPersonas <= 0)
+        {
+            await DisplayAlert("Datos requeridos", "Ingresa información válida para Cliente, Teléfono y Personas.", "Aceptar");
+            return;
+        }
+
+        try
+        {
+            _eventoActual.nombre_cliente = TxtEditCliente.Text.Trim();
+            _eventoActual.telefono_cliente = TxtEditTelefono.Text.Trim();
+            _eventoActual.tipo_evento = TxtEditTipoEvento.Text.Trim();
+            _eventoActual.fecha_evento = DatePickerEditFechaEvento.Date;
+            _eventoActual.hora_evento = TimePickerEditHoraEvento.Time;
+            _eventoActual.numero_personas = numPersonas;
+            _eventoActual.menu = TxtEditMenu.Text?.Trim();
+            _eventoActual.promocion = TxtEditPromocion.Text?.Trim();
+            _eventoActual.observaciones = TxtEditObservaciones.Text?.Trim();
+
+            await _supabaseClient
+                .From<EventoModel>()
+                .Where(x => x.Id == _eventoActual.Id)
+                .Set(x => x.nombre_cliente, _eventoActual.nombre_cliente)
+                .Set(x => x.telefono_cliente, _eventoActual.telefono_cliente)
+                .Set(x => x.tipo_evento, _eventoActual.tipo_evento)
+                .Set(x => x.fecha_evento, _eventoActual.fecha_evento)
+                .Set(x => x.hora_evento, _eventoActual.hora_evento)
+                .Set(x => x.numero_personas, _eventoActual.numero_personas)
+                .Set(x => x.menu, _eventoActual.menu)
+                .Set(x => x.promocion, _eventoActual.promocion)
+                .Set(x => x.observaciones, _eventoActual.observaciones)
+                .Update();
+
+            await DisplayAlert("¡Éxito!", "El evento se ha actualizado correctamente.", "Aceptar");
+
+            decimal totalAbonado = (decimal)HistorialModalAbonos.Sum(a => a.Monto);
+            PintarDetallesEvento(_eventoActual, totalAbonado);
+            ModoEdicionActivo(false);
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert("Error al actualizar", $"Ocurrió un error guardando los datos: {ex.Message}", "Aceptar");
+        }
+    }
+
+    private void OnCancelarEdicionClicked(object sender, EventArgs e)
+    {
+        ModoEdicionActivo(false);
+    }
+
+    private void ModoEdicionActivo(bool enEdicion)
+    {
+        LblDetalleCliente.IsVisible = !enEdicion;
+        TxtEditCliente.IsVisible = enEdicion;
+
+        LblDetalleTelefono.IsVisible = !enEdicion;
+        TxtEditTelefono.IsVisible = enEdicion;
+
+        LblDetalleTipoEvento.IsVisible = !enEdicion;
+        TxtEditTipoEvento.IsVisible = enEdicion;
+
+        LblDetalleFechaEvento.IsVisible = !enEdicion;
+        DatePickerEditFechaEvento.IsVisible = enEdicion;
+
+        LblDetalleHora.IsVisible = !enEdicion;
+        TimePickerEditHoraEvento.IsVisible = enEdicion;
+
+        LblDetallePersonas.IsVisible = !enEdicion;
+        TxtEditPersonas.IsVisible = enEdicion;
+
+        LblDetalleMenu.IsVisible = !enEdicion;
+        TxtEditMenu.IsVisible = enEdicion;
+
+        LblDetallePromocion.IsVisible = !enEdicion;
+        TxtEditPromocion.IsVisible = enEdicion;
+
+        LblDetalleObservaciones.IsVisible = !enEdicion;
+        TxtEditObservaciones.IsVisible = enEdicion;
+
+        BtnModificarEvento.IsVisible = !enEdicion && (_eventoActual != null && (_eventoActual.fecha_evento.Date - DateTime.Today).Days > 10);
+        BtnGuardarModificacion.IsVisible = enEdicion;
+        BtnCancelarEdicion.IsVisible = enEdicion;
+    }
+
+    private void PickerModalMetodo_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        if (sender is Picker picker && picker.SelectedIndex != -1)
+        {
+            picker.InvalidateMeasure();
+        }
+    }
     private void PintarDetallesEvento(EventoModel evento, decimal totalAbonado = 0)
     {
         LblDetalleFolio.Text = evento.folio ?? "---";
@@ -221,12 +476,26 @@ public partial class ListaEventoPage : ContentPage
         LblDetalleObservaciones.Text = string.IsNullOrEmpty(evento.observaciones) ? "Ninguna" : evento.observaciones;
     }
 
-    private void OnRegresarClicked(object sender, EventArgs e)
+    private async void OnRegresarClicked(object sender, EventArgs e)
     {
+        ModoEdicionActivo(false);
         PanelDetalle.IsVisible = false;
         PanelLista.IsVisible = true;
         _eventoActual = null;
-        CargarEventosAsync();
+
+        // Ampliamos el rango de fechas al regresar para asegurarnos de mostrar todos los eventos vigentes o recientes
+        if (DatePickerDesde != null && DatePickerHasta != null)
+        {
+            DateTime hoy = DateTime.Today;
+            DatePickerDesde.Date = hoy.AddMonths(-3); // Rango más amplio hacia atrás
+            DatePickerHasta.Date = hoy.AddMonths(6); // Rango más amplio hacia adelante
+        }
+
+        if (PickerFiltro != null) PickerFiltro.SelectedIndex = 0; // Cambiar a "Todos" o el índice general
+        if (PickerEstatus != null) PickerEstatus.SelectedIndex = 0; // Todos los estatus
+
+        // Recargamos los eventos desde Supabase para repoblar la lista general
+        await CargarEventosAsync();
     }
 
     // ==========================================
@@ -236,7 +505,6 @@ public partial class ListaEventoPage : ContentPage
     {
         if (_eventoActual == null) return;
 
-        // Si ya tiene staff asignado, en lugar de abrir el formulario de asignación, mostramos el modal con el staff actual
         if (_eventoTieneStaffAsignado)
         {
             await MostrarStaffAsignadoModalAsync();
@@ -336,7 +604,6 @@ public partial class ListaEventoPage : ContentPage
 
             foreach (var item in asignaciones)
             {
-                // Consultamos el nombre del usuario
                 var userResp = await _supabaseClient
                     .From<Usuario>()
                     .Where(u => u.Id == item.UsuarioId)
@@ -366,7 +633,6 @@ public partial class ListaEventoPage : ContentPage
         ModalVerStaff.IsVisible = false;
     }
 
-    // --- FILTRADO DE NOMBRES DE STAFF ---
     private void OnStaffPickerChanged(object sender, EventArgs e)
     {
         if (_isUpdatingPickers) return;
@@ -412,7 +678,6 @@ public partial class ListaEventoPage : ContentPage
         }
     }
 
-    // --- FILTRADO DINÁMICO DE ROLES DE MESEROS ---
     private void OnRolPickerChanged(object sender, EventArgs e)
     {
         if (_isUpdatingPickers) return;
@@ -442,12 +707,12 @@ public partial class ListaEventoPage : ContentPage
 
         _isUpdatingPickers = false;
     }
+
     private void RefrescarItemsRolPicker(Picker picker, string? seleccionActual, IEnumerable<string?> otrosSeleccionados, int totalMeseros)
     {
         var listaOtros = otrosSeleccionados.Where(x => !string.IsNullOrEmpty(x)).ToList();
         var rolesDisponibles = new List<string>();
 
-        // Calculamos cuántos espacios libres nos quedan por asignar en los otros pickers
         int asignadosEnOtros = listaOtros.Count;
         int espaciosDisponiblesParaRepetir = (totalMeseros - 1) - asignadosEnOtros;
 
@@ -471,6 +736,7 @@ public partial class ListaEventoPage : ContentPage
             picker.SelectedItem = seleccionActual;
         }
     }
+
     private void OnCerrarModalPersonalClicked(object sender, EventArgs e)
     {
         ModalAsignarPersonal.IsVisible = false;
@@ -505,15 +771,12 @@ public partial class ListaEventoPage : ContentPage
 
         try
         {
-            // 1. Guardar en Base de Datos (Insertar en gitosfiesta_evento_personal)
-            // Obtenemos los IDs reales de los usuarios seleccionados
             long cocineroId = ObtenerIdStaffPorNombre(PickerCocaine.SelectedItem?.ToString());
             long mesero1Id = ObtenerIdStaffPorNombre(PickerMesero1.SelectedItem?.ToString());
             long mesero2Id = ObtenerIdStaffPorNombre(PickerMesero2.SelectedItem?.ToString());
             long mesero3Id = ObtenerIdStaffPorNombre(PickerMesero3.SelectedItem?.ToString());
             long? mesero4Id = esGrupoGrande ? ObtenerIdStaffPorNombre(PickerMesero4.SelectedItem?.ToString()) : null;
 
-            // Limpiamos asignaciones previas si existieran para este evento
             var existingRows = await _supabaseClient
                 .From<EventoPersonalModel>()
                 .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, _eventoActual.Id)
@@ -524,7 +787,6 @@ public partial class ListaEventoPage : ContentPage
                 await _supabaseClient.From<EventoPersonalModel>().Where(x => x.Id == row.Id).Delete();
             }
 
-            // Insertar Cocinero
             await _supabaseClient.From<EventoPersonalModel>().Insert(new EventoPersonalModel
             {
                 EventoId = _eventoActual.Id,
@@ -534,7 +796,6 @@ public partial class ListaEventoPage : ContentPage
                 Enable = true
             });
 
-            // Insertar Mesero 1
             await _supabaseClient.From<EventoPersonalModel>().Insert(new EventoPersonalModel
             {
                 EventoId = _eventoActual.Id,
@@ -544,7 +805,6 @@ public partial class ListaEventoPage : ContentPage
                 Enable = true
             });
 
-            // Insertar Mesero 2
             await _supabaseClient.From<EventoPersonalModel>().Insert(new EventoPersonalModel
             {
                 EventoId = _eventoActual.Id,
@@ -554,7 +814,6 @@ public partial class ListaEventoPage : ContentPage
                 Enable = true
             });
 
-            // Insertar Mesero 3
             await _supabaseClient.From<EventoPersonalModel>().Insert(new EventoPersonalModel
             {
                 EventoId = _eventoActual.Id,
@@ -564,7 +823,6 @@ public partial class ListaEventoPage : ContentPage
                 Enable = true
             });
 
-            // Insertar Mesero 4 (Si aplica)
             if (esGrupoGrande && mesero4Id.HasValue)
             {
                 await _supabaseClient.From<EventoPersonalModel>().Insert(new EventoPersonalModel
@@ -580,7 +838,6 @@ public partial class ListaEventoPage : ContentPage
             await DisplayAlert("¡Éxito!", "El personal y sus roles fueron guardados correctamente en la base de datos.", "Aceptar");
             ModalAsignarPersonal.IsVisible = false;
 
-            // Actualizamos el estado del botón
             await VerificarStaffAsignadoAsync(_eventoActual.Id);
         }
         catch (Exception ex)
@@ -596,9 +853,6 @@ public partial class ListaEventoPage : ContentPage
         return match?.Id ?? 0;
     }
 
-    // ==========================================
-    // LÓGICA DE COMENTARIOS / OBSERVACIONES
-    // ==========================================
     private void OnAgregarComentariosClicked(object sender, EventArgs e)
     {
         if (_eventoActual == null) return;
@@ -621,7 +875,7 @@ public partial class ListaEventoPage : ContentPage
                 .Set(x => x.observaciones, nuevoComentario)
                 .Update();
 
-            decimal totalAbonado = HistorialModalAbonos.Sum(a => a.Monto);
+            decimal totalAbonado = (decimal)HistorialModalAbonos.Sum(a => a.Monto);
             PintarDetallesEvento(_eventoActual, totalAbonado);
             ModalComentarios.IsVisible = false;
 
@@ -638,9 +892,6 @@ public partial class ListaEventoPage : ContentPage
         ModalComentarios.IsVisible = false;
     }
 
-    // ==========================================
-    // LÓGICA DE REALIZAR PAGO / ABONOS
-    // ==========================================
     private async void OnRealizarPagoClicked(object sender, EventArgs e)
     {
         if (_eventoActual == null) return;
@@ -660,7 +911,7 @@ public partial class ListaEventoPage : ContentPage
                 HistorialModalAbonos.Add(abono);
             }
 
-            decimal totalAbonado = listaAbonos.Sum(a => a.Monto);
+            decimal totalAbonado = (decimal)listaAbonos.Sum(a => a.Monto);
             decimal costoTotal = _eventoActual.precio;
             decimal anticipo = _eventoActual.anticipo;
 
@@ -672,7 +923,9 @@ public partial class ListaEventoPage : ContentPage
             LblModalSaldoPendiente.Text = $"${_saldoPendienteModalActual:F2}";
 
             TxtModalMontoAbono.Text = string.Empty;
-            PickerModalMetodo.SelectedIndex = -1;
+
+            // Establecemos 0 por defecto para que seleccione "Efectivo" automáticamente al abrir el modal
+            PickerModalMetodo.SelectedIndex = 0;
 
             ModalAbonos.IsVisible = true;
         }
@@ -681,14 +934,14 @@ public partial class ListaEventoPage : ContentPage
             await DisplayAlert("Error", $"No se pudo cargar el estado de cuenta: {ex.Message}", "Aceptar");
         }
     }
-
     private async void OnRegistrarPagoModalClicked(object sender, EventArgs e)
     {
         if (_eventoActual == null) return;
 
         if (_isProcessing) return;
 
-        if (!decimal.TryParse(TxtModalMontoAbono.Text, out decimal montoNuevo) || montoNuevo <= 0)
+        // Cambiamos a double.TryParse para que coincida con el tipo double del modelo de Supabase
+        if (!double.TryParse(TxtModalMontoAbono.Text, out double montoNuevo) || montoNuevo <= 0)
         {
             await DisplayAlert("Dato inválido", "Ingresa una cantidad válida mayor a cero.", "Aceptar");
             return;
@@ -700,7 +953,7 @@ public partial class ListaEventoPage : ContentPage
             return;
         }
 
-        if (montoNuevo > _saldoPendienteModalActual)
+        if (montoNuevo > (double)_saldoPendienteModalActual)
         {
             await DisplayAlert("Monto excedido", $"No puedes abonar más del saldo pendiente (${_saldoPendienteModalActual:F2}).", "Aceptar");
             return;
@@ -710,6 +963,7 @@ public partial class ListaEventoPage : ContentPage
 
         try
         {
+            // 1. Guardar el nuevo abono con el tipo double compatible con Supabase
             var nuevoAbono = new AbonoModel
             {
                 EventoId = _eventoActual.Id,
@@ -721,18 +975,19 @@ public partial class ListaEventoPage : ContentPage
 
             await _supabaseClient.From<AbonoModel>().Insert(nuevoAbono);
 
-            decimal nuevoSaldoRestante = _saldoPendienteModalActual - montoNuevo;
+            // 2. Cálculo del nuevo saldo restante usando double
+            double nuevoSaldoRestante = (double)_saldoPendienteModalActual - montoNuevo;
             if (nuevoSaldoRestante < 0) nuevoSaldoRestante = 0;
 
             if (nuevoSaldoRestante <= 0)
             {
                 _eventoActual.estatus = "Liquidado";
-                _eventoActual.Saldo = 0;
+                _eventoActual.Saldo = 0m;
 
                 await _supabaseClient.From<EventoModel>()
                     .Where(x => x.Id == _eventoActual.Id)
                     .Set(x => x.estatus, "Liquidado")
-                    .Set(x => x.Saldo, 0)
+                    .Set(x => x.Saldo, 0m)
                     .Update();
 
                 await DisplayAlert("¡Cuenta Liquidada!", "El pago se ha registrado y el evento está totalmente pagado.", "Aceptar");
@@ -744,7 +999,7 @@ public partial class ListaEventoPage : ContentPage
             }
             else
             {
-                _eventoActual.Saldo = nuevoSaldoRestante;
+                _eventoActual.Saldo = (decimal)nuevoSaldoRestante;
 
                 await _supabaseClient.From<EventoModel>()
                     .Where(x => x.Id == _eventoActual.Id)
@@ -755,7 +1010,8 @@ public partial class ListaEventoPage : ContentPage
 
                 OnRealizarPagoClicked(sender, e);
 
-                decimal nuevoTotalAbonado = HistorialModalAbonos.Sum(a => a.Monto);
+                // Si HistorialModalAbonos contiene elementos cuyo Monto ahora es double, hacemos el cast explícito a decimal para pintar la UI
+                decimal nuevoTotalAbonado = (decimal)HistorialModalAbonos.Sum(a => (double)a.Monto);
                 PintarDetallesEvento(_eventoActual, nuevoTotalAbonado);
             }
         }
@@ -774,9 +1030,6 @@ public partial class ListaEventoPage : ContentPage
         ModalAbonos.IsVisible = false;
     }
 
-    // ==========================================
-    // FILTROS Y BÚSQUEDA GENERAL
-    // ==========================================
     private void AplicarFiltrosCombinados()
     {
         if (_todosLosEventos == null) return;
@@ -822,7 +1075,6 @@ public partial class ListaEventoPage : ContentPage
     }
 }
 
-// Clases auxiliares locales para mapeo rápido en vistas
 public class UsuarioModelObj
 {
     public long Id { get; set; }

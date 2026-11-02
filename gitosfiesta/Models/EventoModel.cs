@@ -1,7 +1,7 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-namespace GitosFiesta.Web.Models;
+namespace gitosfiesta.Models;
 
 [Table("gitosfiesta_eventos")]
 public class EventoModel : BaseModel
