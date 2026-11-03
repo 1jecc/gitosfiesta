@@ -35,7 +35,7 @@ public static class MauiProgram
         builder.Services.AddSingleton(provider =>
             new Supabase.Client(supabaseUrl, supabaseKey, options));
 
-        // Sustituir esta URL por la URL pública de Render cuando se publique la API.
+        // API pública publicada en Render.
         builder.Services.AddHttpClient<ContratoApiService>(client =>
         {
             client.BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/");
