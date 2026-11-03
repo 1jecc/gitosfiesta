@@ -296,17 +296,35 @@ public partial class ListaEventoPage : ContentPage
                     .Select(m => $"{m.value1}.- {m.value2}")
                     .ToList() ?? new List<string>();
 
-                var pdfService = new ContratoApiService(_eventoActual, listaTerminos);
-                byte[] pdfBytes = pdfService.GenerarPdf();
+                // Eliminar el bloque antiguo que usa un constructor inexistente y GenerarPdf, sustituyéndolo por el método remoto válido del backend.
 
-                string fileName = $"Contrato_{_eventoActual.folio ?? "Evento"}.pdf";
-                string filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
-                File.WriteAllBytes(filePath, pdfBytes);
-
-                await Launcher.OpenAsync(new OpenFileRequest
+                if (_eventoActual == null)
                 {
-                    Title = "Contrato Gitos Fiesta",
-                    File = new ReadOnlyFile(filePath)
+                    await DisplayAlert("Aviso", "No hay un evento seleccionado.", "Aceptar");
+                    return;
+                }
+
+                var abonoSeleccionado = HistorialModalAbonos.FirstOrDefault();
+                if (abonoSeleccionado == null)
+                {
+                    await DisplayAlert("Aviso", "No hay un abono seleccionado.", "Aceptar");
+                    return;
+                }
+
+                var pdfBytes = await _contratoApiService.GenerarAbonoPdfAsync(
+                    _eventoActual,
+                    abonoSeleccionado,
+                    _saldoPendienteModalActual);
+
+                string ruta = Path.Combine(
+                    FileSystem.CacheDirectory,
+                    $"abono-{abonoSeleccionado.Id}.pdf");
+
+                await File.WriteAllBytesAsync(ruta, pdfBytes);
+                await Share.Default.RequestAsync(new ShareFileRequest
+                {
+                    Title = "Compartir comprobante de abono",
+                    File = new ShareFile(ruta)
                 });
             }
             catch (Exception ex)
@@ -346,8 +364,8 @@ public partial class ListaEventoPage : ContentPage
                 saldoAnterior = saldoAcumulado;
 
                 var pdfBytes = await _contratoApiService.GenerarAbonoPdfAsync(
-                    evento,
-                    abono,
+                    _eventoActual,
+                    abonoSeleccionado,
                     saldoAnterior);
 
                 string fileName = $"Comprobante_AB-{abonoSeleccionado.Id}.pdf";
