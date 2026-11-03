@@ -60,4 +60,32 @@ public sealed class ContratoApiService
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsByteArrayAsync();
     }
+
+    public async Task<byte[]> GenerarAbonoPdfAsync(
+        EventoModel evento,
+        AbonoModel abono,
+        decimal saldoAnterior)
+    {
+        var request = new
+        {
+            EventoId = evento.Id,
+            AbonoId = abono.Id,
+            FolioEvento = evento.folio,
+            NombreCliente = evento.nombre_cliente,
+            TelefonoCliente = evento.telefono_cliente,
+            TipoEvento = evento.tipo_evento,
+            FechaEvento = evento.fecha_evento,
+            FechaPago = abono.FechaPago,
+            Monto = abono.Monto,
+            SaldoAnterior = saldoAnterior,
+            MetodoPago = abono.MetodoPago
+        };
+
+        using var response = await _httpClient.PostAsJsonAsync(
+            $"api/abonos/{abono.Id}/pdf",
+            request);
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadAsByteArrayAsync();
+    }
 }

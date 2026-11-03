@@ -36,11 +36,12 @@ public static class MauiProgram
             new Supabase.Client(supabaseUrl, supabaseKey, options));
 
         // API pública publicada en Render.
-        builder.Services.AddHttpClient<ContratoApiService>(client =>
-        {
-            client.BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/");
-            client.Timeout = TimeSpan.FromSeconds(60);
-        });
+        builder.Services.AddSingleton<ContratoApiService>(_ =>
+            new ContratoApiService(new HttpClient
+            {
+                BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/"),
+                Timeout = TimeSpan.FromSeconds(60)
+            }));
 
         return builder.Build();
     }
