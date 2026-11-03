@@ -236,12 +236,12 @@ public partial class ListaEventoPage : ContentPage
         {
             if (_eventoTieneStaffAsignado)
             {
-                BtnAsignarPersonal.Text = "👥 Staff Asignado";
+                BtnAsignarPersonal.Text = "Staff Asignado";
                 BtnAsignarPersonal.BackgroundColor = Color.FromArgb("#2B6CB0");
             }
             else
             {
-                BtnAsignarPersonal.Text = "👥 Asignar Personal";
+                BtnAsignarPersonal.Text = "Asignar Personal";
                 BtnAsignarPersonal.BackgroundColor = Color.FromArgb("#319795");
             }
         }
@@ -940,8 +940,7 @@ public partial class ListaEventoPage : ContentPage
 
         if (_isProcessing) return;
 
-        // Cambiamos a double.TryParse para que coincida con el tipo double del modelo de Supabase
-        if (!double.TryParse(TxtModalMontoAbono.Text, out double montoNuevo) || montoNuevo <= 0)
+        if (!decimal.TryParse(TxtModalMontoAbono.Text, out decimal montoNuevo) || montoNuevo <= 0)
         {
             await DisplayAlert("Dato inválido", "Ingresa una cantidad válida mayor a cero.", "Aceptar");
             return;
@@ -953,7 +952,7 @@ public partial class ListaEventoPage : ContentPage
             return;
         }
 
-        if (montoNuevo > (double)_saldoPendienteModalActual)
+        if (montoNuevo > (decimal)_saldoPendienteModalActual)
         {
             await DisplayAlert("Monto excedido", $"No puedes abonar más del saldo pendiente (${_saldoPendienteModalActual:F2}).", "Aceptar");
             return;
@@ -963,7 +962,7 @@ public partial class ListaEventoPage : ContentPage
 
         try
         {
-            // 1. Guardar el nuevo abono con el tipo double compatible con Supabase
+            // 1. Guardar el nuevo abono
             var nuevoAbono = new AbonoModel
             {
                 EventoId = _eventoActual.Id,
@@ -975,44 +974,67 @@ public partial class ListaEventoPage : ContentPage
 
             await _supabaseClient.From<AbonoModel>().Insert(nuevoAbono);
 
-            // 2. Cálculo del nuevo saldo restante usando double
-            double nuevoSaldoRestante = (double)_saldoPendienteModalActual - montoNuevo;
+            // 2. Calcular el nuevo saldo restante
+            decimal nuevoSaldoRestante = (decimal)_saldoPendienteModalActual - montoNuevo;
             if (nuevoSaldoRestante < 0) nuevoSaldoRestante = 0;
+
+            // 3. Actualizar el estatus y el saldo en el objeto del evento
+            _eventoActual.Saldo = nuevoSaldoRestante;
 
             if (nuevoSaldoRestante <= 0)
             {
                 _eventoActual.estatus = "Liquidado";
-                _eventoActual.Saldo = 0m;
+            }
 
-                await _supabaseClient.From<EventoModel>()
-                    .Where(x => x.Id == _eventoActual.Id)
-                    .Set(x => x.estatus, "Liquidado")
-                    .Set(x => x.Saldo, 0m)
-                    .Update();
+            // Actualización segura con el objeto completo en Supabase
+            await _supabaseClient.From<EventoModel>()
+                .Where(x => x.Id == _eventoActual.Id)
+                .Update(_eventoActual);
 
-                await DisplayAlert("¡Cuenta Liquidada!", "El pago se ha registrado y el evento está totalmente pagado.", "Aceptar");
-
-                ModalAbonos.IsVisible = false;
-                PanelDetalle.IsVisible = false;
-                PanelLista.IsVisible = true;
-                await CargarEventosAsync();
+            // 4. Mostrar alerta de éxito adaptada según si se liquidó o fue abono parcial
+            if (nuevoSaldoRestante <= 0)
+            {
+                await DisplayAlert("¡Cuenta Liquidada!", "El pago se ha registrado y el evento ha quedado totalmente pagado.", "Aceptar");
             }
             else
             {
-                _eventoActual.Saldo = (decimal)nuevoSaldoRestante;
-
-                await _supabaseClient.From<EventoModel>()
-                    .Where(x => x.Id == _eventoActual.Id)
-                    .Set(x => x.Saldo, nuevoSaldoRestante)
-                    .Update();
-
                 await DisplayAlert("Abono Exitoso", $"Se ha registrado el pago de ${montoNuevo:F2} correctamente.", "Aceptar");
+            }
 
-                OnRealizarPagoClicked(sender, e);
+            // =========================================================================
+            // MANTENERNOS SIEMPRE EN EL MODAL Y REFRESCAR DATOS AL INSTANTE
+            // =========================================================================
 
-                // Si HistorialModalAbonos contiene elementos cuyo Monto ahora es double, hacemos el cast explícito a decimal para pintar la UI
-                decimal nuevoTotalAbonado = (decimal)HistorialModalAbonos.Sum(a => (double)a.Monto);
-                PintarDetallesEvento(_eventoActual, nuevoTotalAbonado);
+            // Consultar los abonos actualizados de Supabase
+            var responseAbonos = await _supabaseClient
+                .From<AbonoModel>()
+                .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, _eventoActual.Id)
+                .Get();
+
+            var listaAbonos = responseAbonos.Models?.OrderBy(a => a.FechaPago).ToList() ?? new List<AbonoModel>();
+
+            HistorialModalAbonos.Clear();
+            foreach (var abono in listaAbonos)
+            {
+                HistorialModalAbonos.Add(abono);
+            }
+
+            // Recalcular montos en el modal
+            decimal totalAbonado = (decimal)listaAbonos.Sum(a => a.Monto);
+            _saldoPendienteModalActual = _eventoActual.Saldo;
+
+            // Refrescar etiquetas visuales del modal
+            LblModalAbonosAcumulados.Text = $"${totalAbonado:F2}";
+            LblModalSaldoPendiente.Text = $"${_saldoPendienteModalActual:F2}";
+            TxtModalMontoAbono.Text = string.Empty;
+
+            // Refrescar también los detalles de la tarjeta de fondo
+            PintarDetallesEvento(_eventoActual, totalAbonado);
+
+            // Si ya se liquidó, actualizamos también la lista general de eventos en segundo plano por si deciden cerrar el modal después
+            if (nuevoSaldoRestante <= 0)
+            {
+                await CargarEventosAsync();
             }
         }
         catch (Exception ex)

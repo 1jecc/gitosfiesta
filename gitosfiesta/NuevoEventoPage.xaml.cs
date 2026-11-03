@@ -68,10 +68,14 @@ public partial class NuevoEventoPage : ContentPage
     {
         base.OnAppearing();
 
-        // Solo ejecutamos la carga inicial la primera vez que entra a la pantalla
+        if (!_eventoId.HasValue && _inicializado)
+        {
+            LimpiarFormularioCompleto();
+        }
+
         if (!_inicializado)
         {
-            await CargarDatosInicialesAsync();
+            await CargarDatosInicialesAsync(); // <--- Cambia _asyncCargaInicial por esto
 
             if (_eventoId.HasValue)
             {
@@ -85,7 +89,6 @@ public partial class NuevoEventoPage : ContentPage
             _inicializado = true;
         }
     }
-
     private async Task ActualizarControlHorarioSegunFechaAsync(DateTime fecha)
     {
         _esFinDeSemana = fecha.DayOfWeek == DayOfWeek.Saturday || fecha.DayOfWeek == DayOfWeek.Sunday;
@@ -170,6 +173,7 @@ public partial class NuevoEventoPage : ContentPage
 
         EvaluarElegibilidadPromocion();
     }
+
 
     private List<string> GenerarHorarios30Minutos()
     {
@@ -660,7 +664,54 @@ public partial class NuevoEventoPage : ContentPage
             LblSaldo.Text = "$0.00";
         }
     }
+    public void LimpiarFormularioDespuesDeExito()
+    {
+        // Permitimos limpiar incluso si _eventoId es nulo (modo nuevo evento)
+        DatePickerFecha.DateSelected -= OnFechaSelected;
 
+        TxtNombreCliente.Text = string.Empty;
+        TxtTelefono.Text = string.Empty;
+        TxtTipoEvento.Text = string.Empty;
+        TxtObservaciones.Text = string.Empty;
+        TxtAnticipo.Text = "1000";
+        _precioBasePaquete = 0;
+        _descuentoPromocion = 0;
+        _extrasSeleccionados.Clear();
+
+        DatePickerFecha.MinimumDate = DateTime.Today.AddDays(15);
+        DatePickerFecha.Date = DateTime.Today.AddDays(15);
+
+        if (ChkShowAnimador != null) ChkShowAnimador.IsChecked = false;
+        if (ChkDecoracionDeluxe != null) ChkDecoracionDeluxe.IsChecked = false;
+        if (ChkBotargaExtra != null) ChkBotargaExtra.IsChecked = false;
+        if (ChkShowPayaso != null) ChkShowPayaso.IsChecked = false;
+        if (ChkHoraExtra != null) ChkHoraExtra.IsChecked = false;
+        if (ChkRentaHoraExtra != null) ChkRentaHoraExtra.IsChecked = false;
+
+        _horaEntreSemanaSeleccionada = false;
+        PickerHorario.SelectedIndex = -1;
+        PickerHorario.ItemsSource = null;
+        PickerHorario.IsEnabled = false;
+
+        PickerHorarioEntreSemana.SelectedIndex = -1;
+        PickerHorarioEntreSemana.ItemsSource = null;
+        PickerHorarioEntreSemana.IsEnabled = false;
+
+        PickerPaquete.ItemsSource = null;
+        PickerPaquete.IsEnabled = false;
+        PickerPaquete.SelectedIndex = -1;
+
+        if (PickerPromocion != null)
+        {
+            PickerPromocion.ItemsSource = null;
+            PickerPromocion.IsEnabled = false;
+            PickerPromocion.SelectedIndex = -1;
+        }
+
+        BloquearPasosDesdePaquete();
+
+        DatePickerFecha.DateSelected += OnFechaSelected;
+    }
     private async void OnGuardarEventoClicked(object sender, EventArgs e)
     {
         if (!_eventoId.HasValue && DatePickerFecha.Date < DateTime.Today.AddDays(15))

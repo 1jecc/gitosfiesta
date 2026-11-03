@@ -124,6 +124,7 @@ public partial class ContratoPage : ContentPage
         await Navigation.PushModalAsync(pizarronPage);
     }
 
+
     private async void OnFinalizarContratoClicked(object sender, EventArgs e)
     {
         try
@@ -144,7 +145,23 @@ public partial class ContratoPage : ContentPage
                     .Update(_eventoActual);
 
                 await DisplayAlert("¡Listo!", "El contrato ha sido guardado y firmado exitosamente.", "Aceptar");
-                await Navigation.PopToRootAsync();
+
+                // =========================================================================
+                // SOLUCIÓN DEFINITIVA: Navegar directo a la lista y limpiar el flujo anterior
+                // =========================================================================
+
+                // 1. Abrimos la lista de eventos como la nueva página principal de la pila
+                await Navigation.PushAsync(new ListaEventoPage(_supabaseClient));
+
+                // 2. Removemos de la pila de navegación tanto la página de Contrato como la de Nuevo Evento
+                var navStack = Navigation.NavigationStack.ToList();
+                foreach (var page in navStack)
+                {
+                    if (page is ContratoPage || page is NuevoEventoPage)
+                    {
+                        Navigation.RemovePage(page);
+                    }
+                }
             }
         }
         catch (Exception ex)

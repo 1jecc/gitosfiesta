@@ -74,6 +74,8 @@ public partial class AbonosPage : ContentPage
             decimal totalAbonado = (decimal)listaAbonos.Sum(a => a.Monto);
             decimal costoTotal = _eventoSeleccionado.precio;
             decimal anticipo = _eventoSeleccionado.anticipo;
+
+            // Cálculo del saldo pendiente actual corregido de guiones extra
             _saldoPendienteActual = costoTotal - anticipo - totalAbonado;
 
             if (_saldoPendienteActual <= 0)
@@ -115,8 +117,8 @@ public partial class AbonosPage : ContentPage
     {
         if (_eventoSeleccionado == null) return;
 
-        // Parseamos directamente como double para mantener la compatibilidad con AbonoModel y Supabase
-        if (!double.TryParse(TxtMontoAbono.Text, out double montoNuevo) || montoNuevo <= 0)
+        // 1. Validar que el monto sea un decimal válido
+        if (!decimal.TryParse(TxtMontoAbono.Text, out decimal montoNuevo) || montoNuevo <= 0)
         {
             await DisplayAlert("Dato inválido", "Ingresa una cantidad válida mayor a cero.", "Aceptar");
             return;
@@ -128,7 +130,7 @@ public partial class AbonosPage : ContentPage
             return;
         }
 
-        if (montoNuevo > (double)_saldoPendienteActual)
+        if (montoNuevo > _saldoPendienteActual)
         {
             await DisplayAlert("Monto excedido", $"No puedes abonar más del saldo pendiente (${_saldoPendienteActual:F2}).", "Aceptar");
             return;
@@ -136,11 +138,11 @@ public partial class AbonosPage : ContentPage
 
         try
         {
-            // 1. Guardar el nuevo abono en la tabla de abonos con Monto de tipo double
+            // 2. Registrar el abono en la base de datos
             var nuevoAbono = new AbonoModel
             {
                 EventoId = _eventoSeleccionado.Id,
-                Monto = montoNuevo, // Compatible al 100% con double y Supabase
+                Monto = montoNuevo,
                 FechaPago = DateTime.Now,
                 MetodoPago = PickerMetodo.SelectedItem.ToString(),
                 Enable = true
@@ -148,23 +150,26 @@ public partial class AbonosPage : ContentPage
 
             await _supabaseClient.From<AbonoModel>().Insert(nuevoAbono);
 
-            // 2. Calcular el nuevo saldo pendiente restando double con double
-            double nuevoSaldoRestante = (double)_saldoPendienteActual - montoNuevo;
-            if (nuevoSaldoRestante < 0) nuevoSaldoRestante = 0;
+            // 3. Calcular el nuevo saldo pendiente restando directamente con decimales
+            decimal nuevoSaldo = _saldoPendienteActual - montoNuevo;
+            if (nuevoSaldo < 0) nuevoSaldo = 0;
 
-            // 3. Actualizar el evento en Supabase (Estatus y Saldo)
-            if (nuevoSaldoRestante <= 0)
+            // 4. Actualizar el modelo del evento localmente
+            _eventoSeleccionado.Saldo = nuevoSaldo;
+
+            if (nuevoSaldo <= 0)
             {
-                // Si cubre todo o queda a favor, se liquida
                 _eventoSeleccionado.estatus = "Liquidado";
-                _eventoSeleccionado.Saldo = 0m;
+            }
 
-                await _supabaseClient.From<EventoModel>()
-                    .Where(x => x.Id == _eventoSeleccionado.Id)
-                    .Set(x => x.estatus, "Liquidado")
-                    .Set(x => x.Saldo, 0m)
-                    .Update();
+            // 5. Enviar la actualización completa del evento a Supabase de forma segura
+            await _supabaseClient.From<EventoModel>()
+                .Where(x => x.Id == _eventoSeleccionado.Id)
+                .Update(_eventoSeleccionado);
 
+            // 6. Mensajes de confirmación y actualización de la interfaz
+            if (nuevoSaldo <= 0)
+            {
                 await DisplayAlert("¡Cuenta Liquidada!", "El pago se ha registrado y el evento está totalmente pagado.", "Aceptar");
 
                 PickerEventos.SelectedIndex = -1;
@@ -176,17 +181,9 @@ public partial class AbonosPage : ContentPage
             }
             else
             {
-                // Si es un abono parcial, actualizamos el saldo restado en la base de datos
-                _eventoSeleccionado.Saldo = (decimal)nuevoSaldoRestante;
-
-                await _supabaseClient.From<EventoModel>()
-                    .Where(x => x.Id == _eventoSeleccionado.Id)
-                    .Set(x => x.Saldo, nuevoSaldoRestante)
-                    .Update();
-
                 await DisplayAlert("Abono Exitoso", $"Se ha registrado el pago de ${montoNuevo:F2} correctamente.", "Aceptar");
 
-                // Recargar la información del evento seleccionado para refrescar los montos en pantalla
+                // Recargar los datos para refrescar la pantalla con el nuevo saldo
                 OnEventoSeleccionado(null, EventArgs.Empty);
             }
         }
@@ -195,5 +192,4 @@ public partial class AbonosPage : ContentPage
             await DisplayAlert("Error al guardar", $"Hubo un problema registrando el pago: {ex.Message}", "Aceptar");
         }
     }
-
 }

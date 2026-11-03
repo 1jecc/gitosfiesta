@@ -13,7 +13,8 @@ public class AbonoModel : BaseModel
     public long EventoId { get; set; }
 
     [Column("monto")]
-    public double Monto { get; set; } 
+
+    public decimal Monto { get; set; } 
 
     [Column("fecha_pago")]
     public DateTime FechaPago { get; set; }

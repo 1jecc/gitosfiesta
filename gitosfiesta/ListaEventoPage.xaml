@@ -15,10 +15,13 @@
         <!-- ========================================== -->
         <!-- VISTA 1: PANEL DE FILTROS Y LISTA GENERAL -->
         <!-- ========================================== -->
-        <VerticalStackLayout x:Name="PanelLista" Grid.Row="0" Grid.RowSpan="2" Spacing="0">
+        <!-- ========================================== -->
+        <!-- VISTA 1: PANEL DE FILTROS Y LISTA GENERAL  -->
+        <!-- ========================================== -->
+        <Grid x:Name="PanelLista" Grid.Row="0" Grid.RowSpan="2" RowDefinitions="Auto, *">
 
-            <!-- Panel de Filtros Superiores Adaptable -->
-            <Frame BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15" Margin="0,0,0,15" BorderColor="#00D2C4">
+            <!-- Panel de Filtros Superiores (Fijo arriba) -->
+            <Frame Grid.Row="0" BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15" Margin="0,0,0,15" BorderColor="#00D2C4">
                 <VerticalStackLayout Spacing="12">
 
                     <Label Text="Buscar y Filtrar Eventos" FontAttributes="Bold" FontSize="14" TextColor="#2D3748"/>
@@ -33,8 +36,7 @@
                                VerticalOptions="Center"/>
                     </Frame>
 
-                    <!-- Filtros desplegables y Fechas (Adaptable con Grid dinámico) -->
-                    <!-- En pantallas pequeñas se apilan o distribuyen mejor en 2 columnas -->
+                    <!-- Filtros desplegables y Fechas -->
                     <Grid RowDefinitions="Auto, Auto" ColumnDefinitions="*, *" ColumnSpacing="10" RowSpacing="10">
 
                         <VerticalStackLayout Grid.Row="0" Grid.Column="0" Spacing="2">
@@ -86,8 +88,9 @@
                 </VerticalStackLayout>
             </Frame>
 
-            <!-- Colección de Eventos -->
+            <!-- Colección de Eventos (Con scroll independiente y fluida sin bloqueos) -->
             <CollectionView x:Name="ColeccionEventos" 
+                            Grid.Row="1"
                             SelectionMode="Single" 
                             SelectionChanged="OnEventoSelected">
                 <CollectionView.EmptyView>
@@ -107,7 +110,7 @@
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
-        </VerticalStackLayout>
+        </Grid>
 
 
         <!-- ========================================== -->
@@ -132,19 +135,19 @@
 
                     <!-- Botones de Acción Superiores (Usando FlexLayout para que bajen de renglón automáticamente en celular) -->
                     <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center" Direction="Row">
-                        <Button Text="📄 Ver Contrato" BackgroundColor="#607D8B" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnVerContratoDetalleClicked"/>
+                        <Button Text="Ver Contrato" BackgroundColor="#607D8B" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnVerContratoDetalleClicked"/>
 
-                        <Button x:Name="BtnModificarEvento" Text="✏️ Modificar Evento" BackgroundColor="#eb6565" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnModificarEventoClicked"/>
+                        <Button x:Name="BtnModificarEvento" Text="Modificar Evento" BackgroundColor="#eb6565" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnModificarEventoClicked"/>
 
-                        <Button x:Name="BtnGuardarModificacion" Text="💾 Guardar Cambios" BackgroundColor="#a6c5d9" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnGuardarModificacionClicked"/>
+                        <Button x:Name="BtnGuardarModificacion" Text="Guardar Cambios" BackgroundColor="#a6c5d9" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnGuardarModificacionClicked"/>
 
-                        <Button x:Name="BtnCancelarEdicion" Text="✕ Cancelar" BackgroundColor="#E53E3E" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnCancelarEdicionClicked"/>
+                        <Button x:Name="BtnCancelarEdicion" Text="Cancelar" BackgroundColor="#E53E3E" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnCancelarEdicionClicked"/>
 
-                        <Button x:Name="BtnAsignarPersonal" Text="👥 Asignar Personal" BackgroundColor="#319795" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnAsignarPersonalClicked"/>
+                        <Button x:Name="BtnAsignarPersonal" Text="Asignar Personal" BackgroundColor="#319795" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnAsignarPersonalClicked"/>
 
-                        <Button Text="💬 Comentarios" BackgroundColor="#d6c82e" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnAgregarComentariosClicked"/>
+                        <Button Text="Comentarios" BackgroundColor="#d6c82e" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnAgregarComentariosClicked"/>
 
-                        <Button Text="💳 Realizar Pago" BackgroundColor="#3fb475" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnRealizarPagoClicked"/>
+                        <Button Text="Realizar Pago" BackgroundColor="#3fb475" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnRealizarPagoClicked"/>
                     </FlexLayout>
 
                 </VerticalStackLayout>
