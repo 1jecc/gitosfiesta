@@ -1,4 +1,5 @@
 using gitosfiesta.Models;
+using gitosfiesta.Services;
 using System.Collections.ObjectModel;
 
 namespace gitosfiesta;
@@ -6,6 +7,7 @@ namespace gitosfiesta;
 public partial class ListaEventoPage : ContentPage
 {
     private readonly Supabase.Client _supabaseClient;
+    private readonly ContratoApiService _contratoApiService;
     private List<EventoModel> _todosLosEventos = new();
     private EventoModel? _eventoActual;
     private bool _isInitialized = false;
@@ -29,6 +31,12 @@ public partial class ListaEventoPage : ContentPage
     {
         InitializeComponent();
         _supabaseClient = supabaseClient;
+        _contratoApiService = App.Current?.Handler?.MauiContext?.Services
+            .GetService<ContratoApiService>()
+            ?? new ContratoApiService(new HttpClient
+            {
+                BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/")
+            });
         ColeccionEventos.ItemsSource = EventosFiltrados;
         ColeccionModalHistorial.ItemsSource = HistorialModalAbonos;
         ColeccionStaffAsignado.ItemsSource = StaffAsignadoList;
@@ -44,6 +52,12 @@ public partial class ListaEventoPage : ContentPage
     {
         InitializeComponent();
         _supabaseClient = supabaseClient;
+        _contratoApiService = App.Current?.Handler?.MauiContext?.Services
+            .GetService<ContratoApiService>()
+            ?? new ContratoApiService(new HttpClient
+            {
+                BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/")
+            });
         _idEventoInicial = eventoId; // <-- ¡Aquí faltaba guardar esta variable!
 
         ColeccionEventos.ItemsSource = EventosFiltrados;
@@ -282,7 +296,7 @@ public partial class ListaEventoPage : ContentPage
                     .Select(m => $"{m.value1}.- {m.value2}")
                     .ToList() ?? new List<string>();
 
-                var pdfService = new ContratoPdfService(_eventoActual, listaTerminos);
+                var pdfService = new ContratoApiService(_eventoActual, listaTerminos);
                 byte[] pdfBytes = pdfService.GenerarPdf();
 
                 string fileName = $"Contrato_{_eventoActual.folio ?? "Evento"}.pdf";
@@ -331,8 +345,10 @@ public partial class ListaEventoPage : ContentPage
                 }
                 saldoAnterior = saldoAcumulado;
 
-                var pdfService = new AbonoPdfService(_eventoActual, abonoSeleccionado, saldoAnterior);
-                byte[] pdfBytes = pdfService.GenerarPdf();
+                var pdfBytes = await _contratoApiService.GenerarAbonoPdfAsync(
+                    evento,
+                    abono,
+                    saldoAnterior);
 
                 string fileName = $"Comprobante_AB-{abonoSeleccionado.Id}.pdf";
                 string filePath = Path.Combine(FileSystem.CacheDirectory, fileName);
