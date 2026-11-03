@@ -25,7 +25,6 @@ public partial class MainPage : ContentPage
 
         try
         {
-            // Ejecutamos de forma controlada para que no bloquee el hilo de UI si ocurre un retraso de red
             await CargarDatosUsuarioAsync();
             await CargarDashboardDataAsync();
         }
@@ -41,7 +40,6 @@ public partial class MainPage : ContentPage
         {
             if (!string.IsNullOrEmpty(SessionContext.NombreCompleto))
             {
-                // Muestra el nombre completo de la persona que hizo login exitoso
                 LblBienvenida.Text = $"¡Bienvenido, {SessionContext.NombreCompleto}!";
             }
             else
@@ -51,14 +49,12 @@ public partial class MainPage : ContentPage
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"Error al cargar el usuario de sesión: {ex.Message}");
             LblBienvenida.Text = "¡Bienvenido!";
         }
 
         return Task.CompletedTask;
     }
 
-    // Detector automático de Pantalla (Laptop vs Celular)
     protected override void OnSizeAllocated(double width, double height)
     {
         base.OnSizeAllocated(width, height);
@@ -93,10 +89,31 @@ public partial class MainPage : ContentPage
                 .Get();
 
             var todosLosEventos = response.Models ?? new List<EventoModel>();
+            bool isStaff = SessionContext.Rol?.ToUpper() == "STAFF";
+
+            if (isStaff)
+            {
+                PanelAlertasPagos.IsVisible = false;
+                GridDashboard.ColumnDefinitions.Clear();
+                GridDashboard.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+                LblTituloProximos.Text = "Mis Próximos Eventos Asignados";
+
+                var respAsignaciones = await _supabaseClient.From<EventoPersonalModel>()
+                    .Filter("usuario_id", Supabase.Postgrest.Constants.Operator.Equals, SessionContext.UsuarioId)
+                    .Get();
+
+                var misAsignaciones = respAsignaciones.Models ?? new List<EventoPersonalModel>();
+                var misEventosIds = misAsignaciones.Select(a => a.EventoId).ToList();
+
+                todosLosEventos = todosLosEventos.Where(e => misEventosIds.Contains(e.Id)).ToList();
+            }
+            else
+            {
+                PanelAlertasPagos.IsVisible = true;
+                LblTituloProximos.Text = "Próximos Eventos";
+            }
 
             DateTime hoy = DateTime.Today;
-
-            // Mostramos la fecha actual formateada en la interfaz (ej. 03 de noviembre de 2026)
             LblFechaActual.Text = hoy.ToString("dd 'de' MMMM 'de' yyyy", new System.Globalization.CultureInfo("es-ES"));
 
             int mesActual = hoy.Month;
@@ -105,11 +122,10 @@ public partial class MainPage : ContentPage
             var eventosDelMes = todosLosEventos
                 .Where(e => e.fecha_evento.Month == mesActual && e.fecha_evento.Year == anioActual)
                 .ToList();
-            int totalMes = eventosDelMes.Count;
 
+            int totalMes = eventosDelMes.Count;
             int finalizados = eventosDelMes.Where(e => e.estatus?.Equals("Finalizado", StringComparison.OrdinalIgnoreCase) == true).Count();
             int liquidados = eventosDelMes.Where(e => e.estatus?.Equals("Liquidado", StringComparison.OrdinalIgnoreCase) == true).Count();
-
             int pendientes = eventosDelMes.Where(e =>
                 !string.Equals(e.estatus, "Liquidado", StringComparison.OrdinalIgnoreCase) &&
                 !string.Equals(e.estatus, "Finalizado", StringComparison.OrdinalIgnoreCase) &&
@@ -124,7 +140,7 @@ public partial class MainPage : ContentPage
             var proximos = todosLosEventos
                 .Where(e => e.fecha_evento.Date >= hoy)
                 .OrderBy(e => e.fecha_evento)
-                .Take(8)
+                .Take(12)
                 .ToList();
 
             ProximosEventosList.Clear();
@@ -142,38 +158,41 @@ public partial class MainPage : ContentPage
             }
 
             AlertasList.Clear();
-            foreach (var ev in todosLosEventos.Where(e => e.fecha_evento.Date >= hoy && e.Saldo > 0))
+            if (!isStaff)
             {
-                int diasRestantes = (ev.fecha_evento.Date - hoy).Days;
-
-                var abonosResp = await _supabaseClient
-                    .From<AbonoModel>()
-                    .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, ev.Id)
-                    .Get();
-
-                decimal totalAbonado = (decimal)(abonosResp.Models ?? new List<AbonoModel>()).Sum(a => a.Monto);
-                decimal minimoRequeridoAnticipo = ev.precio * 0.5m;
-                bool cumpleCincuentaPorciento = (ev.anticipo + totalAbonado) >= minimoRequeridoAnticipo;
-
-                if (diasRestantes <= 7 && ev.Saldo > 0)
+                foreach (var ev in todosLosEventos.Where(e => e.fecha_evento.Date >= hoy && e.Saldo > 0))
                 {
-                    AlertasList.Add(new AlertaViewItem
+                    int diasRestantes = (ev.fecha_evento.Date - hoy).Days;
+
+                    var abonosResp = await _supabaseClient
+                        .From<AbonoModel>()
+                        .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, ev.Id)
+                        .Get();
+
+                    decimal totalAbonado = (decimal)(abonosResp.Models ?? new List<AbonoModel>()).Sum(a => a.Monto);
+                    decimal minimoRequeridoAnticipo = ev.precio * 0.5m;
+                    bool cumpleCincuentaPorciento = (ev.anticipo + totalAbonado) >= minimoRequeridoAnticipo;
+
+                    if (diasRestantes <= 7 && ev.Saldo > 0)
                     {
-                        EventoOriginal = ev,
-                        Folio = $"#{ev.Id}",
-                        Cliente = ev.nombre_cliente,
-                        MensajeAlerta = $"Faltan {diasRestantes} días y aún tiene saldo de ${ev.Saldo:F2} (Debe liquidarse)."
-                    });
-                }
-                else if (diasRestantes <= 15 && !cumpleCincuentaPorciento)
-                {
-                    AlertasList.Add(new AlertaViewItem
+                        AlertasList.Add(new AlertaViewItem
+                        {
+                            EventoOriginal = ev,
+                            Folio = $"#{ev.Id}",
+                            Cliente = ev.nombre_cliente,
+                            MensajeAlerta = $"Faltan {diasRestantes} días y aún tiene saldo de ${ev.Saldo:F2} (Debe liquidarse)."
+                        });
+                    }
+                    else if (diasRestantes <= 15 && !cumpleCincuentaPorciento)
                     {
-                        EventoOriginal = ev,
-                        Folio = $"#{ev.Id}",
-                        Cliente = ev.nombre_cliente,
-                        MensajeAlerta = $"Faltan {diasRestantes} días y no cubre el 50% requerido."
-                    });
+                        AlertasList.Add(new AlertaViewItem
+                        {
+                            EventoOriginal = ev,
+                            Folio = $"#{ev.Id}",
+                            Cliente = ev.nombre_cliente,
+                            MensajeAlerta = $"Faltan {diasRestantes} días y no cubre el 50% requerido."
+                        });
+                    }
                 }
             }
         }
@@ -188,8 +207,96 @@ public partial class MainPage : ContentPage
         if (e.CurrentSelection.FirstOrDefault() is EventoDashboardItem item && item.EventoOriginal != null)
         {
             ((CollectionView)sender).SelectedItem = null;
-            await Navigation.PushAsync(new ListaEventoPage(_supabaseClient, item.EventoOriginal.Id));
+
+            if (SessionContext.Rol?.ToUpper() == "STAFF")
+            {
+                LblModalStaffCliente.Text = item.nombre_cliente;
+                LblModalStaffFecha.Text = $"{item.FechaFormateada} a las {item.EventoOriginal.hora_evento:hh\\:mm}";
+                LblModalStaffTipoEvento.Text = item.EventoOriginal.tipo_evento ?? "N/A";
+                LblModalStaffPersonas.Text = item.EventoOriginal.numero_personas.ToString();
+                LblModalStaffObservaciones.Text = string.IsNullOrWhiteSpace(item.EventoOriginal.observaciones) ? "Ninguna" : item.EventoOriginal.observaciones;
+
+                var resp = await _supabaseClient.From<EventoPersonalModel>()
+                    .Where(x => x.EventoId == item.EventoOriginal.Id && x.UsuarioId == SessionContext.UsuarioId)
+                    .Get();
+                var miAsignacion = resp.Models?.FirstOrDefault();
+
+                string puesto = miAsignacion?.Puesto ?? "Staff General";
+                string rol = miAsignacion?.Rol ?? "Sin rol específico";
+
+                LblModalStaffPuesto.Text = puesto;
+                LblModalStaffRol.Text = rol;
+                LblModalStaffDescripcionRol.Text = ObtenerDescripcionActividades(rol, puesto);
+
+                ModalStaffEvento.IsVisible = true;
+            }
+            else
+            {
+                await Navigation.PushAsync(new ListaEventoPage(_supabaseClient, item.EventoOriginal.Id));
+            }
         }
+    }
+
+    private string ObtenerDescripcionActividades(string rol, string puesto)
+    {
+        string rolUpper = rol?.ToUpper() ?? "";
+        string puestoUpper = puesto?.ToUpper() ?? "";
+
+        if (puestoUpper.Contains("COCINERO"))
+        {
+            return "• Coordinar la preparación de platillos de adultos y niños.\n• Revisar tiempos de salida de alimentos según la pizarra de cocina.\n• Apoyar en la entrega y control de insumos de cocina.";
+        }
+
+        if (rolUpper.Contains("PRINCIPAL") || rolUpper.Contains("BARRA") || rolUpper.Contains("ROL 1"))
+        {
+            return "AL LLEGAR:\n" +
+                   "• Trapear escaleras y terraza.\n" +
+                   "• Preparar snacks: separar platos cuadrados, llenar 30 platos de nachos y colocar fruta/frituras en la mesa de snack.\n\n" +
+                   "DURANTE EL EVENTO (Área Puerta y Snack, Mesas 1, 2 y 3):\n" +
+                   "• Permanecer 1 hora en la puerta abriendo a invitados y guiando hacia los regalos.\n" +
+                   "• Atender mesas 1, 2 y 3 (agua de sabor, palomitas, vasos, servilletas).\n" +
+                   "• Estar al pendiente del queso de nachos y la mesa de pastel (llevar la mesa amarilla a cantar las mañanitas).\n" +
+                   "• Servir comida a adultos por mesa en orden (del 1 al 3).\n\n" +
+                   "AL TERMINAR:\n" +
+                   "• Recoger vasos, platos y basura de mesas 1, 2 y 3 15 min antes de terminar, quitar manteles.\n" +
+                   "• Recoger mesa de snack y lavar baños de hombres y mujeres.";
+        }
+        else if (rolUpper.Contains("ATENCIÓN") || rolUpper.Contains("MESAS") || rolUpper.Contains("ROL 2"))
+        {
+            return "AL LLEGAR (Área Mesas):\n" +
+                   "• Colocar 4 vasos limpios en cada mesa y revisar que estén limpios.\n" +
+                   "• Poner jarra de agua, bowl de palomitas y frituras al iniciar la hora del evento.\n" +
+                   "• Recoger constantemente basura generada por los snacks.\n\n" +
+                   "DURANTE EL EVENTO:\n" +
+                   "• Sillas Infantiles: colocarlas frente al escenario al llegar el show.\n" +
+                   "• Llevar el pastel en el show (cantar mañanitas) y retirarlo a la cocina.\n" +
+                   "• Servir comida a adultos (mesas 4, 5 y 6), dar refill de refresco por 30 min.\n" +
+                   "• Organizar mesas infantiles al terminar el show y servir refresco a los niños.\n\n" +
+                   "AL TERMINAR:\n" +
+                   "• Apoyar en la limpieza general y desalojo del salón.";
+        }
+        else
+        {
+            return "AL LLEGAR ROL 3:\n" +
+                   "• Encender 3 climas (22°C) y luces del área de mesas.\n" +
+                   "• Subir al área de juegos: encender clima, máquina de Xbox, ordenar juguetes, sacudir muebles y limpiar cristales.\n" +
+                   "• Encender luces de la casita de cocina.\n" +
+                   "• Revisar ambos baños (rollo, toallitas, botes de basura, espejos limpios).\n" +
+                   "• Preparar jarras de agua y cortar pan en cocina.\n\n" +
+                   "DURANTE EL EVENTO (Área Juegos y Baños):\n" +
+                   "• Permanecer en área de juego supervisando el uso correcto de muebles, juguetes y Xbox (pedir IFE para controles).\n" +
+                   "• Revisar baños constantemente durante el evento.\n" +
+                   "• Ayudar en cocina a preparar platillos de adultos y niños.\n\n" +
+                   "AL TERMINAR EL EVENTO:\n" +
+                   "• Faltando 20 min apagar Xbox, entregar IFEs, apagar maquinitas y climas de juegos.\n" +
+                   "• Barrer desde el área de juegos, bajar por escaleras hasta la puerta principal y terraza.\n" +
+                   "• Sacar bolsas de basura.";
+        }
+    }
+
+    private void OnCerrarModalStaffClicked(object sender, EventArgs e)
+    {
+        ModalStaffEvento.IsVisible = false;
     }
 
     private async void OnAlertaSelected(object sender, SelectionChangedEventArgs e)
