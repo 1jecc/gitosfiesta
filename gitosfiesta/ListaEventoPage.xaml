@@ -387,8 +387,6 @@
                 SelectedIndexChanged="PickerModalMetodo_SelectedIndexChanged">
                                                 <Picker.Items>
                                                     <x:String>Efectivo</x:String>
-                                                    <x:String>Transferencia</x:String>
-                                                    <x:String>Tarjeta</x:String>
                                                 </Picker.Items>
                                             </Picker>
 

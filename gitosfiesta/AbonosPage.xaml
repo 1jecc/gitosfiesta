@@ -70,8 +70,6 @@
                                     <Picker.ItemsSource>
                                         <x:Array Type="{x:Type x:String}">
                                             <x:String>Efectivo</x:String>
-                                            <x:String>Transferencia</x:String>
-                                            <x:String>Tarjeta</x:String>
                                         </x:Array>
                                     </Picker.ItemsSource>
                                 </Picker>
