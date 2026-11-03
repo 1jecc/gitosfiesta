@@ -4,6 +4,7 @@ using QuestPDF.Infrastructure;
 using gitosfiesta.Models;
 using System.IO;
 using QColors = QuestPDF.Helpers.Colors;
+using System;
 
 namespace gitosfiesta;
 
@@ -53,17 +54,19 @@ public class AbonoPdfService
 
     private void ConstruirEncabezado(QuestPDF.Infrastructure.IContainer container)
     {
+        byte[]? logoBytes = ObtenerLogoBytes();
+
         container.Column(column =>
         {
             column.Item().Row(row =>
             {
                 row.RelativeItem().Column(col =>
                 {
-                    if (File.Exists("imagen3.png"))
+                    if (logoBytes != null)
                     {
                         col.Item()
                             .Width(180)
-                            .Image("imagen3.png");
+                            .Image(logoBytes);
                     }
                     else
                     {
@@ -353,5 +356,30 @@ public class AbonoPdfService
                         .Text("gitosfiestas@gmail.com");
                 });
         });
+    }
+
+    private byte[]? ObtenerLogoBytes()
+    {
+        try
+        {
+#if ANDROID
+            // Lectura segura para Android usando los Assets nativos
+            using var stream = Microsoft.Maui.ApplicationModel.Platform.AppContext.Assets.Open("imagen3.png");
+#else
+        // Lectura para Windows y otras plataformas
+        using var stream = FileSystem.OpenAppPackageFileAsync("imagen3.png").GetAwaiter().GetResult();
+#endif
+            if (stream == null) return null;
+
+            using var memoryStream = new MemoryStream();
+            stream.CopyTo(memoryStream);
+            return memoryStream.ToArray();
+        }
+        catch (Exception ex)
+        {
+            // Si hay un error, lo registra en la consola de depuración en lugar de cerrar la app
+            System.Diagnostics.Debug.WriteLine($"ADVERTENCIA AL CARGAR LOGO EN ABONO: {ex.Message}");
+            return null;
+        }
     }
 }

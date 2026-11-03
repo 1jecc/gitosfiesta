@@ -3,7 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="gitosfiesta.NuevoEventoPage"
              Title="Nuevo Evento"
-             Shell.NavBarIsVisible="False"
+                          Shell.NavBarIsVisible="False"
+
              BackgroundColor="#F4F7F6">
 
     <ScrollView>
@@ -211,14 +212,9 @@
 
             <!-- BOTONES DE ACCIÓN INFERIORES -->
             <VerticalStackLayout Spacing="10" Margin="0,5,0,20">
-                <Button Text="Ver Términos y Condiciones del Salón" 
-                        BackgroundColor="#475569" 
-                        TextColor="White" 
-                        FontAttributes="Bold" 
-                        FontSize="13"
-                        CornerRadius="10" 
-                        HeightRequest="45"
-                        Clicked="OnVerTerminosClicked"/>
+
+
+                        
 
                 <Button x:Name="BtnAccionEvento" Text="Guardar y Registrar Evento" 
                         BackgroundColor="#a6c5d9" 

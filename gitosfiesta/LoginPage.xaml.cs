@@ -97,13 +97,15 @@ public partial class LoginPage : ContentPage
             // 1. Instanciamos el Shell configurando el fondo general del menú lateral
             var shell = new Shell
             {
-                FlyoutBackgroundColor = Color.FromArgb("#F8FAFC") // Fondo gris claro muy moderno y limpio
+                FlyoutBackgroundColor = Color.FromArgb("#F8FAFC"), // Fondo gris claro muy moderno y limpio
+                FlyoutBehavior = FlyoutBehavior.Flyout
             };
 
-            // Color de la barra superior principal
-            Shell.SetBackgroundColor(shell, Color.FromArgb("#1B1464"));
-            Shell.SetForegroundColor(shell, Colors.White);
-            Shell.SetTitleColor(shell, Colors.White);
+            // Conservamos la barra para mantener visible el botón del menú,
+            // pero eliminamos la franja azul.
+            Shell.SetBackgroundColor(shell, Colors.White);
+            Shell.SetForegroundColor(shell, Color.FromArgb("#394957"));
+            Shell.SetTitleColor(shell, Color.FromArgb("#394957"));
 
             // 2. ENCABEZADO FLOTANTE CON DISEÑO ELEGANTE Y FONDO #DCE8F0
             var headerLayout = new Grid

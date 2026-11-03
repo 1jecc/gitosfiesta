@@ -6,14 +6,14 @@
              BackgroundColor="#F1F5F9">
 
     <ScrollView>
-        <Grid VerticalOptions="Center" HorizontalOptions="Center" Padding="20">
+        <Grid HorizontalOptions="Fill" Padding="16,24">
 
             <!-- Tarjeta Principal Amplia y Estilizada -->
             <Border BackgroundColor="White"
                     Stroke="#CBD5E1"
                     StrokeThickness="1"
-                    WidthRequest="460"
-                    HorizontalOptions="Center"
+                    MaximumWidthRequest="460"
+                    HorizontalOptions="Fill"
                     VerticalOptions="Center"
                     Padding="40,35">
                 <Border.StrokeShape>
@@ -23,11 +23,11 @@
                 <VerticalStackLayout Spacing="4">
 
                     <!-- Logo corporativo con un tamaño proporcional y legible -->
-                    <Image Source="imagen3.png" 
-                           HeightRequest="300" 
+                    <Image Source="imagen2.png" 
+                           HeightRequest="170" 
                            Aspect="AspectFit" 
                            HorizontalOptions="Center"
-                           Margin="0,0,0,-100"/>
+                           Margin="0,0,0,4"/>
 
                     <!-- Título y subtítulo -->
                     <VerticalStackLayout Spacing="14" HorizontalOptions="Center">

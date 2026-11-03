@@ -2,22 +2,21 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />
-
 	<application android:allowBackup="true"
                  android:supportsRtl="true"
                  android:label="GITOSFIESTAS"
                  android:icon="@drawable/logop"
                  android:roundIcon="@drawable/logop">
 
-		<!-- Proveedor de archivos requerido para abrir PDFs locales en Android -->
+		<!-- Proveedor de archivos actualizado para .NET 9 MAUI -->
 		<provider
-            android:name="microsoft.maui.storage.FileProvider"
-            android:authorities="${applicationId}.fileProvider"
-            android:exported="false"
-            android:grantUriPermissions="true">
+			android:name="androidx.core.content.FileProvider"
+			android:authorities="${applicationId}.fileprovider"
+			android:exported="false"
+			android:grantUriPermissions="true">
 			<meta-data
-                android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+				android:name="android.support.FILE_PROVIDER_PATHS"
+				android:resource="@xml/file_paths" />
 		</provider>
 
 	</application>

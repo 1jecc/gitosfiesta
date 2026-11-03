@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+using gitosfiesta.Services;
 
 namespace gitosfiesta;
 
@@ -33,6 +34,13 @@ public static class MauiProgram
         // Registramos el cliente de Supabase como un servicio Singleton en el contenedor de dependencias
         builder.Services.AddSingleton(provider =>
             new Supabase.Client(supabaseUrl, supabaseKey, options));
+
+        // Sustituir esta URL por la URL pública de Render cuando se publique la API.
+        builder.Services.AddHttpClient<ContratoApiService>(client =>
+        {
+            client.BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/");
+            client.Timeout = TimeSpan.FromSeconds(60);
+        });
 
         return builder.Build();
     }

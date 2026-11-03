@@ -4,18 +4,16 @@
              xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
              x:Class="gitosfiesta.UsuariosPage"
              Title="Gestión de Usuarios"
-             Shell.NavBarIsVisible="False"
-
              BackgroundColor="#F1F5F9">
 
     <ScrollView Padding="24">
         <!-- Grid principal expansible en dos columnas -->
-        <Grid ColumnDefinitions="*, *" ColumnSpacing="24" HorizontalOptions="Fill">
+        <Grid ColumnDefinitions="*" RowDefinitions="Auto, Auto" RowSpacing="20" HorizontalOptions="Fill">
 
             <!-- ========================================== -->
             <!-- PANEL IZQUIERDO: Lista de Usuarios Registrados -->
             <!-- ========================================== -->
-            <Border Grid.Column="0" BackgroundColor="White" Stroke="#CBD5E1" StrokeThickness="1" Padding="20" VerticalOptions="Start">
+            <Border Grid.Row="0" BackgroundColor="White" Stroke="#CBD5E1" StrokeThickness="1" Padding="20" VerticalOptions="Start">
                 <Border.StrokeShape>
                     <shapes:RoundRectangle CornerRadius="12"/>
                 </Border.StrokeShape>
@@ -86,7 +84,7 @@
             <!-- ========================================== -->
             <!-- PANEL DERECHO: Formulario de Creación      -->
             <!-- ========================================== -->
-            <VerticalStackLayout Grid.Column="1" Spacing="20" VerticalOptions="Start">
+            <VerticalStackLayout Grid.Row="1" Spacing="20" VerticalOptions="Start">
 
                 <Border x:Name="PanelCrearUsuario" BackgroundColor="White" Stroke="#CBD5E1" StrokeThickness="1" Padding="28">
                     <Border.StrokeShape>

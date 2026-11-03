@@ -31,7 +31,10 @@ public class ContratoPdfService
             container.Page(page =>
             {
                 page.Size(PageSizes.Letter);
-                page.Margin(20f);
+                page.MarginTop(20f);
+                page.MarginBottom(20f);
+                page.MarginLeft(20f);
+                page.MarginRight(20f);
                 page.PageColor(QColors.White);
 
                 page.DefaultTextStyle(x =>
@@ -62,53 +65,56 @@ public class ContratoPdfService
                 // ==========================================
                 page.Content().Layers(layers =>
                 {
-                    // CAPA 1 (FONDO): Logotipo y Cuadro de Folio juntos en un Row centrado
+                    // CAPA 1 (FONDO): Logotipo a la izquierda y Folio a la derecha de forma independiente
                     layers.PrimaryLayer().Column(col =>
                     {
-                        col.Item().AlignRight().Row(r =>
+                        // Contenedor principal en fila para separar ambos extremos (Izquierda y Derecha)
+                        col.Item().Row(r =>
                         {
-                            // 1. Logotipo centrado
-                            r.AutoItem().Column(c =>
+                            // 1. ZONA IZQUIERDA: Logotipo con su propio ajuste vertical
+                            r.AutoItem().TranslateY(-55f).AlignLeft().Column(c =>
                             {
                                 if (logoBytes != null)
                                 {
                                     c.Item()
-                                        .Width(360f)
-                                        .Height(240f)
-                                        .Image(logoBytes)
-                                        .FitArea();
+                                      .Width(360f)
+                                      .Height(250f)
+                                      .Image(logoBytes)
+                                      .FitArea();
                                 }
                             });
 
-                            // 2. Cuadro de Folio pegado al lado derecho del logotipo con un pequeño margen
-                            r.AutoItem().PaddingLeft(15f).AlignTop().Column(folioCol =>
+                            // Espacio flexible que empuja el folio hacia el extremo derecho
+                            r.RelativeItem();
+
+                            // 2. ZONA DERECHA: Cuadro de Folio en la esquina superior derecha
+                            r.AutoItem().TranslateY(-5f).AlignRight().Column(folioCol =>
                             {
                                 folioCol.Item()
-                                    .Border(1.5f)
-                                    .BorderColor(QColors.Grey.Lighten1)
-                                    .CornerRadius(8f)
-                                    .Padding(8f)
-                                    .Column(box =>
-                                    {
-                                        box.Item()
-                                            .Text("Folio:")
-                                            .FontSize(12f)
-                                            .Bold();
+                                  .Border(1.5f)
+                                  .BorderColor(QColors.Grey.Lighten1)
+                                  .CornerRadius(8f)
+                                  .Padding(8f)
+                                  .Column(box =>
+                                  {
+                                      box.Item()
+                .Text("Folio:")
+                .FontSize(12f)
+                .Bold();
 
-                                        box.Item()
-                                            .Text(_evento.folio ?? "---")
-                                            .FontSize(16f)
-                                            .Bold()
-                                            .FontColor("#FF1493");
-                                    });
+                                      box.Item()
+                .Text(_evento.folio ?? "---")
+                .FontSize(16f)
+                .Bold()
+                .FontColor("#FF1493");
+                                  });
                             });
                         });
                     });
-
                     // CAPA 2 (SUPERIOR): Texto del contrato sobrepuesto
                     layers.Layer().Column(col =>
                     {
-                        col.Item().TranslateY(145f).Column(infoCol =>
+                        col.Item().TranslateY(135f).Column(infoCol =>
                         {
                             infoCol.Spacing(6f);
 
@@ -361,10 +367,14 @@ public class ContratoPdfService
     {
         try
         {
-            using var stream = FileSystem
-                .OpenAppPackageFileAsync("imagen3.png")
-                .GetAwaiter()
-                .GetResult();
+#if ANDROID
+            // Lectura segura para Android usando los Assets nativos
+            using var stream = Microsoft.Maui.ApplicationModel.Platform.AppContext.Assets.Open("imagen3.png");
+#else
+        // Lectura para Windows y otras plataformas
+        using var stream = FileSystem.OpenAppPackageFileAsync("imagen3.png").GetAwaiter().GetResult();
+#endif
+            if (stream == null) return null;
 
             using var memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
@@ -372,7 +382,8 @@ public class ContratoPdfService
         }
         catch (Exception ex)
         {
-            System.Diagnostics.Debug.WriteLine($"ERROR AL CARGAR LOGO: {ex}");
+            // Si hay un error, lo registra en la consola de depuración en lugar de cerrar la app
+            System.Diagnostics.Debug.WriteLine($"ADVERTENCIA AL CARGAR LOGO EN ABONO: {ex.Message}");
             return null;
         }
     }

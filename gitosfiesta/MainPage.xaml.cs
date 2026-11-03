@@ -58,25 +58,6 @@ public partial class MainPage : ContentPage
     protected override void OnSizeAllocated(double width, double height)
     {
         base.OnSizeAllocated(width, height);
-
-        if (GridDashboard != null)
-        {
-            if (width > 800)
-            {
-                GridDashboard.ColumnDefinitions = new ColumnDefinitionCollection
-                {
-                    new ColumnDefinition { Width = GridLength.Star },
-                    new ColumnDefinition { Width = GridLength.Star }
-                };
-            }
-            else
-            {
-                GridDashboard.ColumnDefinitions = new ColumnDefinitionCollection
-                {
-                    new ColumnDefinition { Width = GridLength.Star }
-                };
-            }
-        }
     }
 
     private async Task CargarDashboardDataAsync()
@@ -93,9 +74,7 @@ public partial class MainPage : ContentPage
 
             if (isStaff)
             {
-                PanelAlertasPagos.IsVisible = false;
-                GridDashboard.ColumnDefinitions.Clear();
-                GridDashboard.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Star });
+                PanelAlertasPagos.IsVisible = true;
                 LblTituloProximos.Text = "Mis Próximos Eventos Asignados";
 
                 var respAsignaciones = await _supabaseClient.From<EventoPersonalModel>()
@@ -158,41 +137,44 @@ public partial class MainPage : ContentPage
             }
 
             AlertasList.Clear();
-            if (!isStaff)
+
+            var abonosResponse = await _supabaseClient
+                .From<AbonoModel>()
+                .Get();
+
+            var abonosPorEvento = (abonosResponse.Models ?? new List<AbonoModel>())
+                .GroupBy(a => a.EventoId)
+                .ToDictionary(g => g.Key, g => g.Sum(a => a.Monto));
+
+            foreach (var ev in todosLosEventos.Where(e => e.fecha_evento.Date >= hoy && e.Saldo > 0))
             {
-                foreach (var ev in todosLosEventos.Where(e => e.fecha_evento.Date >= hoy && e.Saldo > 0))
+                int diasRestantes = (ev.fecha_evento.Date - hoy).Days;
+                decimal totalAbonado = abonosPorEvento.TryGetValue(ev.Id, out var abonado)
+                    ? (decimal)abonado
+                    : 0m;
+
+                decimal minimoRequeridoAnticipo = ev.precio * 0.5m;
+                bool cumpleCincuentaPorciento = (ev.anticipo + totalAbonado) >= minimoRequeridoAnticipo;
+
+                if (diasRestantes <= 7 && ev.Saldo > 0)
                 {
-                    int diasRestantes = (ev.fecha_evento.Date - hoy).Days;
-
-                    var abonosResp = await _supabaseClient
-                        .From<AbonoModel>()
-                        .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, ev.Id)
-                        .Get();
-
-                    decimal totalAbonado = (decimal)(abonosResp.Models ?? new List<AbonoModel>()).Sum(a => a.Monto);
-                    decimal minimoRequeridoAnticipo = ev.precio * 0.5m;
-                    bool cumpleCincuentaPorciento = (ev.anticipo + totalAbonado) >= minimoRequeridoAnticipo;
-
-                    if (diasRestantes <= 7 && ev.Saldo > 0)
+                    AlertasList.Add(new AlertaViewItem
                     {
-                        AlertasList.Add(new AlertaViewItem
-                        {
-                            EventoOriginal = ev,
-                            Folio = $"#{ev.Id}",
-                            Cliente = ev.nombre_cliente,
-                            MensajeAlerta = $"Faltan {diasRestantes} días y aún tiene saldo de ${ev.Saldo:F2} (Debe liquidarse)."
-                        });
-                    }
-                    else if (diasRestantes <= 15 && !cumpleCincuentaPorciento)
+                        EventoOriginal = ev,
+                        Folio = $"#{ev.Id}",
+                        Cliente = ev.nombre_cliente,
+                        MensajeAlerta = $"Faltan {diasRestantes} días y aún tiene saldo de ${ev.Saldo:F2} (Debe liquidarse)."
+                    });
+                }
+                else if (diasRestantes <= 15 && !cumpleCincuentaPorciento)
+                {
+                    AlertasList.Add(new AlertaViewItem
                     {
-                        AlertasList.Add(new AlertaViewItem
-                        {
-                            EventoOriginal = ev,
-                            Folio = $"#{ev.Id}",
-                            Cliente = ev.nombre_cliente,
-                            MensajeAlerta = $"Faltan {diasRestantes} días y no cubre el 50% requerido."
-                        });
-                    }
+                        EventoOriginal = ev,
+                        Folio = $"#{ev.Id}",
+                        Cliente = ev.nombre_cliente,
+                        MensajeAlerta = $"Faltan {diasRestantes} días y no cubre el 50% requerido."
+                    });
                 }
             }
         }
@@ -305,6 +287,45 @@ public partial class MainPage : ContentPage
         {
             ((CollectionView)sender).SelectedItem = null;
             await Navigation.PushAsync(new ListaEventoPage(_supabaseClient, item.EventoOriginal.Id));
+        }
+    }
+
+    private async void OnEventoDashboardSelected(object sender, SelectionChangedEventArgs e)
+    {
+        var item = e.CurrentSelection?.FirstOrDefault() as EventoDashboardItem;
+        if (sender is CollectionView collectionView)
+            collectionView.SelectedItem = null;
+
+        if (item?.EventoOriginal == null)
+            return;
+
+        try
+        {
+            await Navigation.PushAsync(new ListaEventoPage(_supabaseClient, item.EventoOriginal.Id));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al abrir evento desde inicio: {ex.Message}");
+            await DisplayAlert("Error", "No se pudo abrir el evento.", "Aceptar");
+        }
+    }
+
+    private async void OnEventoDashboardTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is not EventoDashboardItem item ||
+            item.EventoOriginal == null)
+        {
+            return;
+        }
+
+        try
+        {
+            await Navigation.PushAsync(new ListaEventoPage(_supabaseClient, item.EventoOriginal.Id));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al abrir evento: {ex.Message}");
+            await DisplayAlert("Error", "No se pudo abrir el evento.", "Aceptar");
         }
     }
 }

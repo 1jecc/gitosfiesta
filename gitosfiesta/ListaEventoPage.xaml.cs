@@ -91,8 +91,7 @@ public partial class ListaEventoPage : ContentPage
 
                 if (BtnModificarEvento != null)
                 {
-                    int diasRestantes = (evento.fecha_evento.Date - DateTime.Today).Days;
-                    BtnModificarEvento.IsVisible = (diasRestantes > 10);
+                    BtnModificarEvento.IsVisible = true;
                 }
 
                 // Ocultamos la lista y mostramos el panel de detalles con la información lista
@@ -131,10 +130,9 @@ public partial class ListaEventoPage : ContentPage
         if (PickerFiltro != null) PickerFiltro.SelectedIndex = 2;
         if (PickerEstatus != null && PickerEstatus.SelectedIndex == -1) PickerEstatus.SelectedIndex = 0;
 
-        // 👇 RESTABLECER LOS FILTROS DE FECHA PARA QUE NO OCULTEN LOS DEMÁS EVENTOS 👇
-        // (Ajusta los nombres "DatePickerDesde" y "DatePickerHasta" con los nombres reales de tus controles en el XAML si difieren)
-        if (DatePickerDesde != null) DatePickerDesde.Date = DateTime.Today.AddMonths(-1); // O un rango inicial adecuado
-        if (DatePickerHasta != null) DatePickerHasta.Date = DateTime.Today.AddMonths(3);  // O déjalos en null si tu lógica lo permite
+        // Al entrar a la lista se muestran todos los eventos; el usuario puede acotar después.
+        if (DatePickerDesde != null) DatePickerDesde.Date = new DateTime(2000, 1, 1);
+        if (DatePickerHasta != null) DatePickerHasta.Date = new DateTime(2100, 12, 31);
 
         _isInitialized = true;
         await CargarEventosAsync();
@@ -150,17 +148,34 @@ public partial class ListaEventoPage : ContentPage
 
             if (SessionContext.Rol?.ToUpper() == "STAFF")
             {
-                query = query.Filter("usuario_creacion_id", Supabase.Postgrest.Constants.Operator.Equals, SessionContext.UsuarioId);
-            }
+                var asignaciones = await _supabaseClient
+                    .From<EventoPersonalModel>()
+                    .Filter("usuario_id", Supabase.Postgrest.Constants.Operator.Equals, SessionContext.UsuarioId)
+                    .Get();
 
-            var response = await query.Get();
-            _todosLosEventos = response.Models?.OrderBy(e => e.fecha_evento).ToList() ?? new List<EventoModel>();
+                var idsAsignados = (asignaciones.Models ?? new List<EventoPersonalModel>())
+                    .Select(x => x.EventoId)
+                    .ToList();
+
+                _todosLosEventos = (await query.Get()).Models?
+                    .Where(e => idsAsignados.Contains(e.Id))
+                    .OrderBy(e => e.fecha_evento)
+                    .ToList() ?? new List<EventoModel>();
+            }
+            else
+            {
+                var response = await query.Get();
+                _todosLosEventos = response.Models?
+                    .OrderBy(e => e.fecha_evento)
+                    .ToList() ?? new List<EventoModel>();
+            }
 
             AplicarFiltrosCombinados();
         }
         catch (Exception ex)
         {
-            await DisplayAlert("Error", $"No se pudieron cargar los eventos: {ex.Message}", "Aceptar");
+            System.Diagnostics.Debug.WriteLine($"Error al cargar eventos: {ex.Message}");
+            await DisplayAlert("Error", "No se pudieron cargar los eventos.", "Aceptar");
         }
     }
 
@@ -172,41 +187,45 @@ public partial class ListaEventoPage : ContentPage
 
     private async void OnEventoSelected(object sender, SelectionChangedEventArgs e)
     {
-        var evento = e.CurrentSelection.FirstOrDefault() as EventoModel;
-        if (evento == null) return;
+        if (_isProcessing)
+            return;
 
-        ((CollectionView)sender).SelectedItem = null;
-        _eventoActual = evento;
+        var evento = e.CurrentSelection?.FirstOrDefault() as EventoModel;
+        if (evento == null)
+            return;
 
-        decimal totalAbonado = 0;
+        // CollectionView no vuelve a lanzar SelectionChanged si queda seleccionado el mismo elemento.
+        if (sender is CollectionView collectionView)
+            collectionView.SelectedItem = null;
+
+        _isProcessing = true;
         try
         {
+            _eventoActual = evento;
+
+            decimal totalAbonado = 0;
             var responseAbonos = await _supabaseClient
                 .From<AbonoModel>()
                 .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, evento.Id)
                 .Get();
 
-            var listaAbonos = responseAbonos.Models ?? new List<AbonoModel>();
-            totalAbonado = (decimal)listaAbonos.Sum(a => a.Monto);
+            totalAbonado = (decimal)(responseAbonos.Models ?? new List<AbonoModel>()).Sum(a => a.Monto);
+            await VerificarStaffAsignadoAsync(evento.Id);
+            PintarDetallesEvento(evento, totalAbonado);
+            ModoEdicionActivo(false);
+
+            PanelLista.IsVisible = false;
+            PanelDetalle.IsVisible = true;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            totalAbonado = 0;
+            System.Diagnostics.Debug.WriteLine($"Error al abrir el evento {evento.Id}: {ex.Message}");
+            await DisplayAlert("Error", "No se pudo abrir el evento seleccionado.", "Aceptar");
         }
-
-        await VerificarStaffAsignadoAsync(evento.Id);
-        PintarDetallesEvento(evento, totalAbonado);
-        ModoEdicionActivo(false);
-
-        // Habilitar / Mostrar botón de Modificar SOLO si faltan MÁS de 10 días
-        if (BtnModificarEvento != null)
+        finally
         {
-            int diasRestantes = (evento.fecha_evento.Date - DateTime.Today).Days;
-            BtnModificarEvento.IsVisible = (diasRestantes > 10);
+            _isProcessing = false;
         }
-
-        PanelLista.IsVisible = false;
-        PanelDetalle.IsVisible = true;
     }
 
     private async Task VerificarStaffAsignadoAsync(long eventoId)
@@ -337,23 +356,10 @@ public partial class ListaEventoPage : ContentPage
     // ==========================================
     private async void OnModificarEventoClicked(object sender, EventArgs e)
     {
-        if (_eventoActual == null) return;
-
-        // Validación estricta: solo se permite modificar si faltan más de 10 días
-        int diasRestantes = (_eventoActual.fecha_evento.Date - DateTime.Today).Days;
-        if (diasRestantes <= 10)
-        {
-            await DisplayAlert(
-                "No permitido",
-                $"Este evento ocurrirá en {diasRestantes} días. Solo se permite editar si faltan más de 10 días.",
-                "Aceptar"
-            );
+        if (_eventoActual == null)
             return;
-        }
 
-        // Abre exactamente la misma vista de configuración y opciones de "NuevoEventoPage" 
-        // pero cargando la información de este evento gracias al _eventoActual.Id
-        await Navigation.PushAsync(new NuevoEventoPage(_supabaseClient, _eventoActual.Id));
+        ModoEdicionActivo(true);
     }
 
     private async void OnGuardarModificacionClicked(object sender, EventArgs e)
@@ -1093,6 +1099,44 @@ public partial class ListaEventoPage : ContentPage
         foreach (var ev in resultado)
         {
             EventosFiltrados.Add(ev);
+        }
+    }
+
+    private async void OnEventoCardTapped(object sender, TappedEventArgs e)
+    {
+        if (e.Parameter is not EventoModel evento)
+        {
+            return;
+        }
+
+        if (_isProcessing)
+            return;
+
+        _isProcessing = true;
+        try
+        {
+            _eventoActual = evento;
+
+            var responseAbonos = await _supabaseClient
+                .From<AbonoModel>()
+                .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, evento.Id)
+                .Get();
+
+            decimal totalAbonado = (decimal)(responseAbonos.Models ?? new List<AbonoModel>()).Sum(a => a.Monto);
+            await VerificarStaffAsignadoAsync(evento.Id);
+            PintarDetallesEvento(evento, totalAbonado);
+            ModoEdicionActivo(false);
+            PanelLista.IsVisible = false;
+            PanelDetalle.IsVisible = true;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error al abrir evento: {ex.Message}");
+            await DisplayAlert("Error", "No se pudo abrir el evento.", "Aceptar");
+        }
+        finally
+        {
+            _isProcessing = false;
         }
     }
 }

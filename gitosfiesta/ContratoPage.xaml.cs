@@ -1,4 +1,5 @@
 using gitosfiesta.Models;
+using gitosfiesta.Services;
 
 namespace gitosfiesta;
 
@@ -6,6 +7,7 @@ public partial class ContratoPage : ContentPage
 {
     private readonly Supabase.Client? _supabaseClient;
     private readonly long _eventoId;
+    private readonly ContratoApiService _contratoApiService;
     private EventoModel? _eventoActual;
     private string? _firmaBase64;
     private List<MiscModel> _listaTerminosCache = new(); // Para guardar los términos cargados
@@ -16,6 +18,56 @@ public partial class ContratoPage : ContentPage
         InitializeComponent();
         _supabaseClient = supabaseClient;
         _eventoId = eventoId;
+        _contratoApiService = App.Current?.Handler?.MauiContext?.Services
+            .GetService<ContratoApiService>()
+            ?? new ContratoApiService(new HttpClient
+            {
+                BaseAddress = new Uri("https://gitosfiesta-api.onrender.com/")
+            });
+    }
+
+    private async void OnGenerarPdfClicked(object sender, EventArgs e)
+    {
+        if (_eventoActual == null)
+        {
+            await DisplayAlert("Aviso", "El evento todavía no se ha cargado.", "Aceptar");
+            return;
+        }
+
+        try
+        {
+            if (sender is Button button)
+                button.IsEnabled = false;
+
+            var pdfBytes = await _contratoApiService.GenerarPdfAsync(
+                _eventoActual,
+                _listaTerminosCache,
+                _firmaBase64);
+
+            var ruta = Path.Combine(
+                FileSystem.CacheDirectory,
+                $"contrato-{_eventoActual.Id}.pdf");
+
+            await File.WriteAllBytesAsync(ruta, pdfBytes);
+
+            await Share.Default.RequestAsync(new ShareFileRequest
+            {
+                Title = "Compartir contrato",
+                File = new ShareFile(ruta)
+            });
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert(
+                "Error al generar contrato",
+                $"No se pudo obtener el PDF desde el servidor: {ex.Message}",
+                "Aceptar");
+        }
+        finally
+        {
+            if (sender is Button button)
+                button.IsEnabled = true;
+        }
     }
 
     protected override async void OnAppearing()

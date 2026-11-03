@@ -2,11 +2,8 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
-
              x:Class="gitosfiesta.ListaEventoPage"
              Title="Lista de Eventos"
-             Shell.NavBarIsVisible="False"
-
              BackgroundColor="#fff">
 
 
@@ -91,7 +88,7 @@
             <!-- Colección de Eventos (Con scroll independiente y fluida sin bloqueos) -->
             <CollectionView x:Name="ColeccionEventos" 
                             Grid.Row="1"
-                            SelectionMode="Single" 
+                            SelectionMode="Single"
                             SelectionChanged="OnEventoSelected">
                 <CollectionView.EmptyView>
                     <Label Text="No se encontraron eventos con los filtros seleccionados." HorizontalOptions="Center" VerticalOptions="Center" TextColor="#888" FontSize="14"/>
@@ -99,6 +96,10 @@
                 <CollectionView.ItemTemplate>
                     <DataTemplate>
                         <Frame BackgroundColor="White" CornerRadius="12" HasShadow="True" Padding="15" Margin="0,0,0,12" BorderColor="#00D2C4">
+                            <Frame.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnEventoCardTapped"
+                                                      CommandParameter="{Binding .}" />
+                            </Frame.GestureRecognizers>
                             <Grid RowDefinitions="Auto, Auto, Auto" ColumnDefinitions="*, Auto">
                                 <Label Grid.Row="0" Grid.Column="0" Text="{Binding nombre_cliente}" FontAttributes="Bold" FontSize="15" TextColor="#2D3748"/>
                                 <Label Grid.Row="0" Grid.Column="1" Text="{Binding fecha_evento, StringFormat='{0:dd/MM/yyyy}'}" FontAttributes="Bold" TextColor="#00D2C4" FontSize="13"/>
@@ -172,7 +173,7 @@
                             <Frame Grid.Column="1" BackgroundColor="#F8F9FA" Padding="10" CornerRadius="8" HasShadow="False">
                                 <VerticalStackLayout>
                                     <Label Text="FECHA DE CONTRATO" FontAttributes="Bold" TextColor="#718096" FontSize="11"/>
-                                    <Label x:Name="LblDetalleFechaContrato" Text="---" TextColor="#2D3748" FontSize="13"/>
+                                    <Label x:Name="LblDetalleFechaContrato" Text="---" TextColor="#2D3748" FontAttributes="Bold" FontSize="13"/>
                                 </VerticalStackLayout>
                             </Frame>
                         </Grid>

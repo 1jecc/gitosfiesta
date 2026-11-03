@@ -4,8 +4,6 @@
              xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
              x:Class="gitosfiesta.TerminosPage"
              Title="Términos y Condiciones"
-             Shell.NavBarIsVisible="False"
-
              BackgroundColor="#FFFFFF">
 
     <ScrollView>

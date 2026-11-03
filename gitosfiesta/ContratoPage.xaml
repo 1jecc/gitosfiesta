@@ -4,7 +4,7 @@
              xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
              x:Class="gitosfiesta.ContratoPage"
              Title="Contrato Gitos Fiesta"
-             Shell.NavBarIsVisible="False"
+                          Shell.NavBarIsVisible="False"
 
              BackgroundColor="#FFFFFF">
 
@@ -184,6 +184,16 @@
                         HeightRequest="48"
                         Clicked="OnFinalizarContratoClicked"/>
             </Grid>
+
+            <!-- Botón para generar y compartir PDF -->
+            <Button Text="Generar y compartir PDF"
+                    Clicked="OnGenerarPdfClicked"
+                    BackgroundColor="#1B1464"
+                    TextColor="White"
+                    FontAttributes="Bold"
+                    HeightRequest="50"
+                    CornerRadius="10"
+                    Margin="0,12,0,0" />
 
         </VerticalStackLayout>
     </ScrollView>

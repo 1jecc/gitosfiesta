@@ -1,4 +1,7 @@
 <Solution>
-  <Project Path="gitosfiesta/gitosfiesta.csproj" />
+  <Project Path="GitosFiesta.Api/GitosFiesta.Api.csproj" />
+  <Project Path="gitosfiesta/gitosfiesta.csproj">
+    <Deploy Solution="Debug|*" />
+  </Project>
   <Project Path="gitosfiesta/GitosFiesta.Web/GitosFiesta.Web.csproj" />
 </Solution>
