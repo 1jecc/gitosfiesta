@@ -185,16 +185,6 @@
                         Clicked="OnFinalizarContratoClicked"/>
             </Grid>
 
-            <!-- Botón para generar y compartir PDF -->
-            <Button Text="Generar y compartir PDF"
-                    Clicked="OnGenerarPdfClicked"
-                    BackgroundColor="#1B1464"
-                    TextColor="White"
-                    FontAttributes="Bold"
-                    HeightRequest="50"
-                    CornerRadius="10"
-                    Margin="0,12,0,0" />
-
         </VerticalStackLayout>
     </ScrollView>
 </ContentPage>

@@ -288,7 +288,49 @@ public partial class ListaEventoPage : ContentPage
             return;
         }
 
-        await Navigation.PushAsync(new ContratoPage(_supabaseClient, _eventoActual.Id));
+        try
+        {
+            if (sender is Button button)
+                button.IsEnabled = false;
+
+            var responseTerminos = await _supabaseClient
+                .From<MiscModel>()
+                .Where(x => x.categoria == "TERMINO_CONTRATO" && x.enable == true)
+                .Get();
+
+            var terminos = responseTerminos.Models?
+                .OrderBy(x => int.TryParse(x.value1, out int numero) ? numero : 0)
+                .ToList() ?? new List<MiscModel>();
+
+            var pdfBytes = await _contratoApiService.GenerarPdfAsync(
+                _eventoActual,
+                terminos,
+                _eventoActual.firma);
+
+            var ruta = Path.Combine(
+                FileSystem.CacheDirectory,
+                $"contrato-{_eventoActual.Id}.pdf");
+
+            await File.WriteAllBytesAsync(ruta, pdfBytes);
+
+            await Launcher.Default.OpenAsync(new OpenFileRequest
+            {
+                Title = "Abrir contrato",
+                File = new ReadOnlyFile(ruta)
+            });
+        }
+        catch (Exception ex)
+        {
+            await DisplayAlert(
+                "Error al abrir contrato",
+                $"No se pudo generar el contrato desde Render: {ex.Message}",
+                "Aceptar");
+        }
+        finally
+        {
+            if (sender is Button button)
+                button.IsEnabled = true;
+        }
     }
 
     private async void OnVerComprobanteAbonoClicked(object sender, EventArgs e)
