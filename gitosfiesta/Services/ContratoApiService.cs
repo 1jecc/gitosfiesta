@@ -21,6 +21,8 @@ public sealed class ContratoPdfRequest
     public string? Promocion { get; set; }
     public string? Observaciones { get; set; }
     public string? FirmaBase64 { get; set; }
+    public string? LogoBase64 { get; set; }
+    public string? WatermarkBase64 { get; set; }
     public List<string> Terminos { get; set; } = new();
 }
 

@@ -63,7 +63,10 @@ public partial class AbonosPage : ContentPage
                 .Filter("evento_id", Supabase.Postgrest.Constants.Operator.Equals, _eventoSeleccionado.Id)
                 .Get();
 
-            var listaAbonos = responseAbonos.Models?.OrderBy(a => a.FechaPago).ToList() ?? new List<AbonoModel>();
+            var listaAbonos = responseAbonos.Models?
+                .Where(a => a.Enable)
+                .OrderBy(a => a.FechaPago)
+                .ToList() ?? new List<AbonoModel>();
 
             HistorialAbonos.Clear();
             foreach (var abono in listaAbonos)

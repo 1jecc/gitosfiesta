@@ -108,7 +108,7 @@ public partial class ContratoPage : ContentPage
                 LblMenu.Text = _eventoActual.menu;
                 LblPrecio.Text = $"${_eventoActual.precio:F2}";
                 LblAnticipo.Text = $"${_eventoActual.anticipo:F2}";
-                LblSaldo.Text = $"${(_eventoActual.precio - _eventoActual.anticipo):F2}";
+                LblSaldo.Text = $"${_eventoActual.Saldo:F2}";
                 LblPromocion.Text = string.IsNullOrWhiteSpace(_eventoActual.promocion) ? "Ninguna" : _eventoActual.promocion;
                 LblObservaciones.Text = string.IsNullOrWhiteSpace(_eventoActual.observaciones) ? "Ninguna" : _eventoActual.observaciones;
 

@@ -99,7 +99,6 @@ public sealed class ContratoPdfGenerator
                                 info.Item().PaddingTop(4).Column(terms =>
                                 {
                                     terms.Spacing(2);
-                                    terms.Item().Text("TÉRMINOS Y CONDICIONES").Bold();
                                     foreach (var term in data.Terminos)
                                         terms.Item().Text(term).FontSize(12).LineHeight(1);
                                 });
