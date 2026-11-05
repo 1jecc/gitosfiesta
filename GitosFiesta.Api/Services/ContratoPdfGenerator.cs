@@ -45,13 +45,12 @@ public sealed class ContratoPdfGenerator
                     {
                         column.Item().Row(row =>
                         {
-                            row.AutoItem().TranslateY(-55).AlignLeft().Column(logoColumn =>
+                            row.RelativeItem().TranslateY(-55).AlignCenter().Column(logoColumn =>
                             {
                                 if (logo is not null)
                                     logoColumn.Item().Width(360).Height(250).Image(logo).FitArea();
                             });
 
-                            row.RelativeItem();
                             row.AutoItem().TranslateY(-5).AlignRight().Column(folio =>
                             {
                                 folio.Item().Border(1.5f).BorderColor(Colors.Grey.Lighten1)

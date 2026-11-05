@@ -280,62 +280,15 @@ public partial class ListaEventoPage : ContentPage
         }
     }
 
-    private async void OnVerContratoDetalleClicked(object sender, EventArgs e)
+    private async void OnVerContratoClicked(object sender, EventArgs e)
     {
-        if (_eventoActual != null && _supabaseClient != null)
+        if (_eventoActual == null)
         {
-            try
-            {
-                var responseMisc = await _supabaseClient
-                    .From<MiscModel>()
-                    .Where(x => x.categoria == "TERMINO_CONTRATO" && x.enable == true)
-                    .Get();
-
-                var listaTerminos = responseMisc.Models?
-                    .OrderBy(m => int.TryParse(m.value1, out int num) ? num : 0)
-                    .Select(m => $"{m.value1}.- {m.value2}")
-                    .ToList() ?? new List<string>();
-
-                // Eliminar el bloque antiguo que usa un constructor inexistente y GenerarPdf, sustituyéndolo por el método remoto válido del backend.
-
-                if (_eventoActual == null)
-                {
-                    await DisplayAlert("Aviso", "No hay un evento seleccionado.", "Aceptar");
-                    return;
-                }
-
-                var abonoSeleccionado = HistorialModalAbonos.FirstOrDefault();
-                if (abonoSeleccionado == null)
-                {
-                    await DisplayAlert("Aviso", "No hay un abono seleccionado.", "Aceptar");
-                    return;
-                }
-
-                var pdfBytes = await _contratoApiService.GenerarAbonoPdfAsync(
-                    _eventoActual,
-                    abonoSeleccionado,
-                    _saldoPendienteModalActual);
-
-                string ruta = Path.Combine(
-                    FileSystem.CacheDirectory,
-                    $"abono-{abonoSeleccionado.Id}.pdf");
-
-                await File.WriteAllBytesAsync(ruta, pdfBytes);
-                await Share.Default.RequestAsync(new ShareFileRequest
-                {
-                    Title = "Compartir comprobante de abono",
-                    File = new ShareFile(ruta)
-                });
-            }
-            catch (Exception ex)
-            {
-                await DisplayAlert("Error", $"No se pudo generar el contrato: {ex.Message}", "Aceptar");
-            }
+            await DisplayAlert("Aviso", "Selecciona un evento antes de ver el contrato.", "Aceptar");
+            return;
         }
-        else
-        {
-            await DisplayAlert("Aviso", "No se pudo identificar el evento seleccionado.", "Aceptar");
-        }
+
+        await Navigation.PushAsync(new ContratoPage(_supabaseClient, _eventoActual.Id));
     }
 
     private async void OnVerComprobanteAbonoClicked(object sender, EventArgs e)

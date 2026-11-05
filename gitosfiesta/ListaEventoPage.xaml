@@ -136,7 +136,7 @@
 
                     <!-- Botones de Acción Superiores (Usando FlexLayout para que bajen de renglón automáticamente en celular) -->
                     <FlexLayout Wrap="Wrap" JustifyContent="Start" AlignItems="Center" Direction="Row">
-                        <Button Text="Ver Contrato" BackgroundColor="#607D8B" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnVerContratoDetalleClicked"/>
+                        <Button Text="Ver Contrato" BackgroundColor="#607D8B" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" Margin="0,0,8,8" Clicked="OnVerContratoClicked"/>
 
                         <Button x:Name="BtnModificarEvento" Text="Modificar Evento" BackgroundColor="#eb6565" TextColor="White" FontAttributes="Bold" FontSize="12" CornerRadius="10" HeightRequest="40" IsVisible="False" Margin="0,0,8,8" Clicked="OnModificarEventoClicked"/>
 
