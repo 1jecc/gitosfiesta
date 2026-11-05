@@ -53,12 +53,29 @@ public sealed class ContratoApiService
             Promocion = evento.promocion,
             Observaciones = evento.observaciones,
             FirmaBase64 = firmaBase64,
+            LogoBase64 = await LeerRecursoBase64Async("imagen3.png"),
+            WatermarkBase64 = await LeerRecursoBase64Async("imagen3.png"),
             Terminos = terminos.Select(x => $"{x.value1}.- {x.value2}").ToList()
         };
 
         using var response = await _httpClient.PostAsJsonAsync($"api/contratos/{evento.Id}/pdf", request);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadAsByteArrayAsync();
+    }
+
+    private static async Task<string?> LeerRecursoBase64Async(string nombre)
+    {
+        try
+        {
+            using var stream = await FileSystem.OpenAppPackageFileAsync(nombre);
+            using var memory = new MemoryStream();
+            await stream.CopyToAsync(memory);
+            return Convert.ToBase64String(memory.ToArray());
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     public async Task<byte[]> GenerarAbonoPdfAsync(
